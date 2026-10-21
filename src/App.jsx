@@ -85,16 +85,12 @@ export default function App() {
   }
 
   const handleReadWord = (item) => {
-    const firstRead = !progress.wordsRead.includes(item.word)
     markWordRead(item.word)
-    if (firstRead) addStars(1)
     speak(item.word, { rate: 0.8 })
   }
 
   const handleReadSentence = (item) => {
-    const firstRead = !progress.sentencesRead.includes(item.sentence)
     markSentenceRead(item.sentence)
-    if (firstRead) addStars(1)
     speak(item.sentence, { rate: 0.7 })
   }
 
