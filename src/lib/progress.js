@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   DEFAULT_PROGRESS,
   AVATARS,
+  STAR_RESULTS,
   initProfiles,
   createProfile as createProfileApi,
   switchProfile as switchProfileApi,
@@ -48,6 +49,18 @@ export function useProgress() {
 
   const addStars = useCallback((amount) => {
     setProgress((prev) => ({ ...prev, stars: Math.max(0, prev.stars + amount) }))
+  }, [])
+
+  // Record the latest game result for a character, keeping only the last 3.
+  const recordCharResult = useCallback((char, correct) => {
+    setProgress((prev) => {
+      const prevResults = Array.isArray(prev.charResults?.[char]) ? prev.charResults[char] : []
+      const nextResults = [...prevResults, Boolean(correct)].slice(-STAR_RESULTS)
+      return {
+        ...prev,
+        charResults: { ...prev.charResults, [char]: nextResults },
+      }
+    })
   }, [])
 
   const recordQuiz = useCallback((correct, total) => {
@@ -105,6 +118,7 @@ export function useProgress() {
     markWordRead,
     markSentenceRead,
     addStars,
+    recordCharResult,
     recordQuiz,
     reset,
     switchProfile,
@@ -114,4 +128,4 @@ export function useProgress() {
   }
 }
 
-export { AVATARS } from './profiles.js'
+export { AVATARS, STAR_RESULTS, starsForChar } from './profiles.js'

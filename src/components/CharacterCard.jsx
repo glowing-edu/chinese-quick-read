@@ -1,4 +1,4 @@
-export default function CharacterCard({ item, heard, onLearn, onSpeakWord }) {
+export default function CharacterCard({ item, heard, stars = 0, onLearn, onSpeakWord }) {
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
@@ -11,13 +11,17 @@ export default function CharacterCard({ item, heard, onLearn, onSpeakWord }) {
       className={`card${heard ? ' card--heard' : ''}`}
       role="button"
       tabIndex={0}
-      aria-label={`生字 ${item.char}，粵拼 ${item.jyutping}`}
+      aria-label={`生字 ${item.char}，粵拼 ${item.jyutping}，${stars} 粒星`}
       onClick={onLearn}
       onKeyDown={handleKeyDown}
     >
       {heard && (
-        <span className="card__badge" title="已學過">
-          ⭐
+        <span className="card__stars" title={`${stars} / 3 粒星`} aria-hidden="true">
+          {[0, 1, 2].map((i) => (
+            <span key={i} className={`card__star${i < stars ? ' card__star--on' : ''}`}>
+              {i < stars ? '⭐' : '☆'}
+            </span>
+          ))}
         </span>
       )}
       <span className="card__speak" aria-hidden="true">

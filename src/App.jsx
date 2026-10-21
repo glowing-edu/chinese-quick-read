@@ -6,8 +6,8 @@ import SentenceDrill from './components/SentenceDrill.jsx'
 import WordDrill from './components/WordDrill.jsx'
 import { LESSONS, buildCharLessonMap } from './data/lessons.js'
 import { useProgress } from './lib/progress.js'
+import { starsForChar } from './lib/profiles.js'
 import { canSpeak, hasChineseVoice, speak, stopSpeaking } from './lib/speech.js'
-
 const CHAR_LESSON = buildCharLessonMap()
 
 export default function App() {
@@ -22,6 +22,7 @@ export default function App() {
     markWordRead,
     markSentenceRead,
     addStars,
+    recordCharResult,
     recordQuiz,
     reset,
     switchProfile,
@@ -243,6 +244,7 @@ export default function App() {
                 key={item.char}
                 item={item}
                 heard={progress.heard.includes(item.char)}
+                stars={starsForChar(progress, item.char)}
                 onLearn={() => handleLearn(item)}
                 onSpeakWord={() => speak(item.word, { rate: 0.8 })}
               />
@@ -282,7 +284,9 @@ export default function App() {
           <Quiz
             characters={lesson.characters}
             best={progress.quizBest}
+            starsFor={(char) => starsForChar(progress, char)}
             addStars={addStars}
+            recordCharResult={recordCharResult}
             recordQuiz={recordQuiz}
             onBack={() => switchTab('learn')}
           />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { STAR_RESULTS } from '../lib/profiles'
 import { speak, stopSpeaking } from '../lib/speech'
 
 const MAX_QUESTIONS = 8
@@ -13,24 +14,45 @@ function shuffle(list) {
   return arr
 }
 
-function buildRound(characters) {
+// Pick which characters to test. Prioritises characters that don't yet have
+// 3 stars, capped at half the round, then fills the rest with any character.
+function pickTestCharacters(characters, starsFor) {
   const roundSize = Math.min(MAX_QUESTIONS, characters.length)
-  return shuffle(characters)
-    .slice(0, roundSize)
-    .map((answer) => {
-      const distractors = shuffle(characters.filter((c) => c !== answer)).slice(
-        0,
-        OPTION_COUNT - 1,
-      )
-      return { answer, options: shuffle([answer, ...distractors]) }
-    })
+  const needsWork = characters.filter((c) => starsFor(c.char) < STAR_RESULTS)
+  const priorityCount = Math.min(Math.floor(roundSize / 2), needsWork.length)
+  const priority = shuffle(needsWork).slice(0, priorityCount)
+  const chosen = new Set(priority.map((c) => c.char))
+  const rest = shuffle(characters.filter((c) => !chosen.has(c.char))).slice(
+    0,
+    roundSize - priority.length,
+  )
+  return [...priority, ...rest]
+}
+
+function buildRoundFor(characters, starsFor) {
+  const picked = pickTestCharacters(characters, starsFor)
+  return shuffle(picked).map((answer) => {
+    const distractors = shuffle(characters.filter((c) => c !== answer)).slice(
+      0,
+      OPTION_COUNT - 1,
+    )
+    return { answer, options: shuffle([answer, ...distractors]) }
+  })
 }
 
 const say = (text) => speak(text, { rate: 0.75 })
 
-export default function Quiz({ characters, best, addStars, recordQuiz, onBack }) {
+export default function Quiz({
+  characters,
+  best,
+  starsFor,
+  addStars,
+  recordCharResult,
+  recordQuiz,
+  onBack,
+}) {
   const [phase, setPhase] = useState('intro') // intro | play | done
-  const [round, setRound] = useState(() => buildRound(characters))
+  const [round, setRound] = useState(() => buildRoundFor(characters, starsFor))
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState(null)
   const [score, setScore] = useState(0)
@@ -57,7 +79,7 @@ export default function Quiz({ characters, best, addStars, recordQuiz, onBack })
 
   const start = () => {
     clearTimeout(timer)
-    const fresh = buildRound(characters)
+    const fresh = buildRoundFor(characters, starsFor)
     setRound(fresh)
     setIndex(0)
     setPicked(null)
@@ -71,6 +93,7 @@ export default function Quiz({ characters, best, addStars, recordQuiz, onBack })
     const nextScore = correct ? score + 1 : score
     setPicked(option)
     say(option.char)
+    recordCharResult(question.answer.char, correct)
     if (correct) {
       setScore(nextScore)
       addStars(1)
@@ -101,7 +124,9 @@ export default function Quiz({ characters, best, addStars, recordQuiz, onBack })
             <li>
               👂 {total} 條問題 · {total} questions
             </li>
-            <li>⭐ 答啱一題 = 1 粒星 · 1 star per correct answer</li>
+            <li>
+              ⭐ 每個字答啱 3 次 = 3 粒星 · 3 correct = 3 stars per character
+            </li>
             {best && (
               <li>
                 🏅 最佳成績 · Best: {best.correct} / {best.total}

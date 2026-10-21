@@ -520,12 +520,25 @@ button {
   background: #fffdf4;
 }
 
-.card__badge {
+.card__stars {
   position: absolute;
   top: -12px;
   right: -8px;
-  font-size: 24px;
+  display: flex;
+  gap: 1px;
+  font-size: 18px;
+  line-height: 1;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.15));
+  animation: pop 0.35s ease;
+}
+
+.card__star {
+  color: #cbb994;
+  transition: transform 0.15s ease;
+}
+
+.card__star--on {
+  color: var(--gold);
   animation: pop 0.35s ease;
 }
 

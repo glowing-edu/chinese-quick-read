@@ -13,6 +13,17 @@ const DEFAULT_PROGRESS = {
   stars: 0,
   quizBest: null,
   quizzesPlayed: 0,
+  charResults: {}, // { [char]: boolean[] } — last 3 quiz results per character
+}
+
+// Number of recent game results kept per character. 3 correct = 3 stars.
+export const STAR_RESULTS = 3
+
+// Stars earned for a character = number of recent correct answers (0-3).
+export function starsForChar(progress, char) {
+  const results = progress.charResults?.[char]
+  if (!Array.isArray(results)) return 0
+  return results.filter(Boolean).length
 }
 
 const AVATARS = ['🐻', '🐰', '🐱', '🐶', '🐼', '🦊', '🐸', '🦄']
@@ -51,6 +62,8 @@ function loadProgressForProfile(id) {
       heard: Array.isArray(saved.heard) ? saved.heard : [],
       wordsRead: Array.isArray(saved.wordsRead) ? saved.wordsRead : [],
       sentencesRead: Array.isArray(saved.sentencesRead) ? saved.sentencesRead : [],
+      charResults:
+        saved.charResults && typeof saved.charResults === 'object' ? saved.charResults : {},
     }
   } catch {
     return DEFAULT_PROGRESS
@@ -76,6 +89,8 @@ function loadLegacyProgress() {
       heard: Array.isArray(saved.heard) ? saved.heard : [],
       wordsRead: Array.isArray(saved.wordsRead) ? saved.wordsRead : [],
       sentencesRead: Array.isArray(saved.sentencesRead) ? saved.sentencesRead : [],
+      charResults:
+        saved.charResults && typeof saved.charResults === 'object' ? saved.charResults : {},
     }
   } catch {
     return null
