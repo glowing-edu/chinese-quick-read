@@ -54,6 +54,7 @@ export default function Quiz({
   const [round, setRound] = useState(() => buildRoundFor(characters, starsFor))
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState(null)
+  const [results, setResults] = useState([]) // true/false for answered questions
   const [score, setScore] = useState(0)
   const [timer, setTimer] = useState(null)
 
@@ -82,6 +83,7 @@ export default function Quiz({
     setRound(fresh)
     setIndex(0)
     setPicked(null)
+    setResults([])
     setScore(0)
     setPhase('play')
   }
@@ -93,6 +95,7 @@ export default function Quiz({
     setPicked(option)
     say(option.char)
     recordCharResult(question.answer.char, correct)
+    setResults((prev) => [...prev, correct])
     if (correct) {
       setScore(nextScore)
     }
@@ -183,7 +186,7 @@ export default function Quiz({
           {round.map((q, i) => (
             <span
               key={q.answer.char}
-              className={`dot${i < index ? ' dot--done' : ''}${i === index ? ' dot--current' : ''}`}
+              className={`dot${i < index ? (results[i] ? ' dot--ok' : ' dot--wrong') : ''}${i === index ? ' dot--current' : ''}`}
             />
           ))}
         </span>

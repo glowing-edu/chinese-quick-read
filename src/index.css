@@ -1009,14 +1009,19 @@ button {
   border: 2px solid var(--line);
 }
 
-.dot--done {
+.dot--ok {
   background: var(--mint);
   border-color: var(--mint);
 }
 
+.dot--wrong {
+  background: var(--bad);
+  border-color: var(--bad);
+}
+
 .dot--current {
-  background: var(--coral);
-  border-color: var(--coral-dark);
+  background: var(--gold);
+  border-color: #e5a800;
   transform: scale(1.3);
 }
 
