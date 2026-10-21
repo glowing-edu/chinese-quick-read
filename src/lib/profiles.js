@@ -15,6 +15,17 @@ const DEFAULT_PROGRESS = {
   charResults: {}, // { [char]: boolean[] } — last 3 quiz results per character
 }
 
+// Fresh, independent copy of the default progress object.
+function freshProgress() {
+  return {
+    ...DEFAULT_PROGRESS,
+    heard: [],
+    wordsRead: [],
+    sentencesRead: [],
+    charResults: {},
+  }
+}
+
 // Number of recent game results kept per character. 3 correct = 3 stars.
 export const STAR_RESULTS = 3
 
@@ -79,7 +90,7 @@ function saveProfiles(profiles) {
 function loadProgressForProfile(id) {
   try {
     const raw = window.localStorage.getItem(PROGRESS_PREFIX + id)
-    if (!raw) return DEFAULT_PROGRESS
+    if (!raw) return freshProgress()
     const saved = JSON.parse(raw)
     return {
       ...DEFAULT_PROGRESS,
@@ -91,7 +102,7 @@ function loadProgressForProfile(id) {
         saved.charResults && typeof saved.charResults === 'object' ? saved.charResults : {},
     }
   } catch {
-    return DEFAULT_PROGRESS
+    return freshProgress()
   }
 }
 
@@ -164,7 +175,7 @@ export function initProfiles() {
   profiles = [profile]
   saveProfiles(profiles)
   setCurrentId(profile.id)
-  const progress = legacy ?? DEFAULT_PROGRESS
+  const progress = legacy ?? freshProgress()
   saveProgressForProfile(profile.id, progress)
   // Optionally keep legacy for safety, but we've migrated
   return { profiles, currentId: profile.id, progress }
@@ -180,9 +191,10 @@ export function createProfile(name, avatar) {
   }
   const next = [...profiles, profile]
   saveProfiles(next)
-  saveProgressForProfile(profile.id, DEFAULT_PROGRESS)
+  const progress = freshProgress()
+  saveProgressForProfile(profile.id, progress)
   setCurrentId(profile.id)
-  return { profiles: next, currentId: profile.id, progress: DEFAULT_PROGRESS }
+  return { profiles: next, currentId: profile.id, progress }
 }
 
 export function switchProfile(id) {
@@ -227,4 +239,4 @@ export function saveProgress(id, progress) {
   saveProgressForProfile(id, progress)
 }
 
-export { DEFAULT_PROGRESS, AVATARS }
+export { DEFAULT_PROGRESS, AVATARS, freshProgress }

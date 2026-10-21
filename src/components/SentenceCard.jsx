@@ -1,13 +1,8 @@
-// Unique Chinese characters in a sentence (punctuation excluded) —
-// a sentence unlocks once all of these have been learned.
-export function sentenceChars(sentence) {
-  const text = Array.isArray(sentence) ? sentence.join('\n') : sentence || ''
-  return [...new Set([...text].filter((ch) => /[一-鿿]/.test(ch)))]
-}
+import { sentenceChars, sentenceText } from '../lib/sentence.js'
 
 export default function SentenceCard({ item, learned, read, lessonOf, onRead }) {
-  const sentenceText = Array.isArray(item.sentence) ? item.sentence.join('\n') : item.sentence || ''
-  const requires = sentenceChars(sentenceText)
+  const text = sentenceText(item.sentence)
+  const requires = sentenceChars(text)
   const missing = requires.filter((c) => !learned.includes(c))
   const locked = missing.length > 0
 
@@ -22,7 +17,7 @@ export default function SentenceCard({ item, learned, read, lessonOf, onRead }) 
         </span>
         {item.title && <div className="sentence__title">{item.title}</div>}
         <span className="sentence__text sentence__text--dim" aria-hidden="true">
-          {sentenceText}
+          {text}
         </span>
         <span className="wordcard__hint">
           先學 · Learn first:
@@ -57,7 +52,7 @@ export default function SentenceCard({ item, learned, read, lessonOf, onRead }) 
       className={`sentence${read ? ' sentence--read' : ''}`}
       role="button"
       tabIndex={0}
-      aria-label={`句子 ${sentenceText}`}
+      aria-label={`句子 ${text}`}
       onClick={onRead}
       onKeyDown={handleKeyDown}
     >
@@ -70,7 +65,7 @@ export default function SentenceCard({ item, learned, read, lessonOf, onRead }) 
         🔊
       </span>
       {item.title && <div className="sentence__title">{item.title}</div>}
-      <span className="sentence__text">{sentenceText}</span>
+      <span className="sentence__text">{text}</span>
       {item.jyutping && <span className="sentence__jyut">{item.jyutping}</span>}
       {item.meaning && <span className="sentence__meaning">{item.meaning}</span>}
     </div>

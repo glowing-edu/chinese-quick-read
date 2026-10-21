@@ -80,11 +80,8 @@ export default function App() {
     setTab(nextLesson && nextLesson.characters.length === 0 ? 'words' : 'learn')
   }
 
-  useEffect(() => {
-    if (isRevision && tab === 'learn') {
-      setTab('words')
-    }
-  }, [lessonId, isRevision, tab])
+  // Revisions have no characters, so the Learn tab is never available.
+  const activeTab = isRevision && tab === 'learn' ? 'words' : tab
 
   const handleLearn = (item) => {
     markHeard(item.char)
@@ -148,11 +145,7 @@ export default function App() {
               key={l.id}
               type="button"
               className={`lesson-pill${l.id === lessonId ? ' lesson-pill--active' : ''}`}
-              onClick={() => {
-                stopSpeaking()
-                setLessonId(l.id)
-                setTab(l.characters.length === 0 ? 'words' : 'learn')
-              }}
+              onClick={() => switchLesson(l.id)}
               aria-current={l.id === lessonId ? 'true' : undefined}
             >
               <span aria-hidden="true">{l.characters.length === 0 ? '📘' : `L${l.id}`}</span>
@@ -200,7 +193,7 @@ export default function App() {
         {!isRevision && (
           <button
             type="button"
-            className={`tab${tab === 'learn' ? ' tab--active' : ''}`}
+            className={`tab${activeTab === 'learn' ? ' tab--active' : ''}`}
             onClick={() => switchTab('learn')}
           >
             📖 學生字<span className="tab__en"> Learn</span>
@@ -208,7 +201,7 @@ export default function App() {
         )}
         <button
           type="button"
-          className={`tab${tab === 'words' ? ' tab--active' : ''}`}
+          className={`tab${activeTab === 'words' ? ' tab--active' : ''}`}
           onClick={() => switchTab('words')}
         >
           📚 讀詞語<span className="tab__en"> Words</span>
@@ -216,7 +209,7 @@ export default function App() {
         {sentences.length > 0 && (
           <button
             type="button"
-            className={`tab${tab === 'sentences' ? ' tab--active' : ''}`}
+            className={`tab${activeTab === 'sentences' ? ' tab--active' : ''}`}
             onClick={() => switchTab('sentences')}
           >
             ✍️ 讀句子<span className="tab__en"> Sentences</span>
@@ -225,7 +218,7 @@ export default function App() {
         {!isRevision && (
           <button
             type="button"
-            className={`tab${tab === 'game' ? ' tab--active' : ''}`}
+            className={`tab${activeTab === 'game' ? ' tab--active' : ''}`}
             onClick={() => switchTab('game')}
           >
             🎮 小遊戲<span className="tab__en"> Game</span>
@@ -233,7 +226,7 @@ export default function App() {
         )}
       </nav>
 
-      {tab === 'learn' && (
+      {activeTab === 'learn' && (
         <main className="learn">
           {complete && (
             <div className="banner">
@@ -269,7 +262,7 @@ export default function App() {
         </main>
       )}
 
-      {tab === 'words' && (
+      {activeTab === 'words' && (
         <main>
           <WordDrill
             words={lesson.words}
@@ -282,7 +275,7 @@ export default function App() {
         </main>
       )}
 
-      {tab === 'sentences' && sentences.length > 0 && (
+      {activeTab === 'sentences' && sentences.length > 0 && (
         <main>
           <SentenceDrill
             sentences={sentences}
@@ -295,7 +288,7 @@ export default function App() {
         </main>
       )}
 
-      {tab === 'game' && (
+      {activeTab === 'game' && (
         <main>
           <Quiz
             characters={lesson.characters}
