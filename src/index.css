@@ -1095,6 +1095,7 @@ button {
   font-size: clamp(56px, 9vw, 76px);
   font-weight: 800;
   line-height: 1;
+  color: var(--ink);
 }
 
 .opt--ok {
@@ -1102,6 +1103,15 @@ button {
   border-color: var(--ok);
   box-shadow: 0 6px 0 #1f9e5a;
   animation: pop 0.3s ease;
+  opacity: 1;
+}
+
+.opt--ok .opt__char {
+  color: #000;
+}
+
+.opt--dim .opt__char {
+  color: var(--ink-soft);
 }
 
 .opt--bad {
