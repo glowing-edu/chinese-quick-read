@@ -789,12 +789,6 @@ button {
   grid-template-columns: 1fr;
 }
 
-@media (min-width: 900px) {
-  .grid--sentences {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 .sentence {
   position: relative;
   background: var(--card);
