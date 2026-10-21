@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import CharacterCard from './components/CharacterCard.jsx'
+import CloudSync from './components/CloudSync.jsx'
 import ProfileSwitcher from './components/ProfileSwitcher.jsx'
 import Quiz from './components/Quiz.jsx'
 import SentenceDrill from './components/SentenceDrill.jsx'
@@ -8,6 +9,7 @@ import { LESSONS, buildCharLessonMap } from './data/lessons.js'
 import { useProgress } from './lib/progress.js'
 import { starsForChar, starsForLesson, resultsForChar, totalStars, STAR_RESULTS } from './lib/profiles.js'
 import { canSpeak, hasChineseVoice, speak, stopSpeaking } from './lib/speech.js'
+import { useSync } from './lib/sync.js'
 
 const CHAR_LESSON = buildCharLessonMap()
 
@@ -32,7 +34,12 @@ export default function App() {
     addProfile,
     renameProfile,
     removeProfile,
+    exportSnapshot,
+    mergeSnapshot,
   } = useProgress()
+
+  const sync = useSync({ exportSnapshot, mergeSnapshot })
+  const { schedule: scheduleSync } = sync
 
   const lesson = LESSONS.find((l) => l.id === lessonId) ?? LESSONS[0]
   const sentences = lesson.sentences ?? []
@@ -67,6 +74,12 @@ export default function App() {
   // Global star total across all lessons, capped at 3 stars per character.
   const earnedStars = useMemo(() => totalStars(progress, ALL_CHARS), [progress])
   const maxStars = ALL_CHARS.length * STAR_RESULTS
+
+  // Push to the cloud a few seconds after anything changes. useSync skips the
+  // write when the content is identical, so this cannot loop on itself.
+  useEffect(() => {
+    scheduleSync()
+  }, [profiles, progress, scheduleSync])
 
   const switchTab = (next) => {
     stopSpeaking()
@@ -131,6 +144,7 @@ export default function App() {
             onRename={renameProfile}
             onDelete={removeProfile}
           />
+          <CloudSync sync={sync} />
           <span className="badge-stars" title="星星 Stars earned">
             ⭐ {earnedStars} / {maxStars}
           </span>

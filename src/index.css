@@ -263,6 +263,116 @@ button {
   padding: 8px 16px;
 }
 
+/* ===== Cloud sync ===== */
+
+.sync__btn {
+  gap: 6px;
+  padding-right: 12px;
+}
+
+.sync__label {
+  white-space: nowrap;
+}
+
+.sync__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--mint);
+}
+
+.sync__dot--busy {
+  background: var(--gold);
+  animation: sync-blink 1s ease-in-out infinite;
+}
+
+.sync__dot--error {
+  background: var(--bad);
+}
+
+@keyframes sync-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.sync__dropdown {
+  width: min(320px, 92vw);
+}
+
+.sync__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sync__pic {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  object-fit: cover;
+}
+
+.sync__pic--fallback {
+  display: grid;
+  place-items: center;
+  background: var(--cream);
+  font-size: 17px;
+}
+
+.sync__email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.sync__status {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.sync__actions {
+  flex-wrap: wrap;
+  justify-content: stretch;
+  gap: 8px;
+}
+
+.sync__actions .btn {
+  flex: 1 1 100%;
+}
+
+.sync__hint {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* Shown in the OAuth popup window instead of the app. */
+.auth-return {
+  padding: 48px 24px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
 /* ===== Progress ===== */
 
 .progress {

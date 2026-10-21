@@ -9,6 +9,8 @@ import {
   deleteProfile as deleteProfileApi,
   saveProgress,
   loadProgress,
+  exportSnapshot as buildSnapshot,
+  mergeSnapshot as applyRemoteSnapshot,
 } from './profiles.js'
 
 export function useProgress() {
@@ -129,6 +131,20 @@ export function useProgress() {
     })
   }, [])
 
+  // --- Cloud sync hooks ------------------------------------------------------
+  // Snapshots always read/write storage directly: mutations persist the moment
+  // they happen, so localStorage is never behind this hook's state.
+
+  const exportSnapshot = useCallback(() => buildSnapshot(), [])
+
+  /** Merge a downloaded backup into local storage and refresh state. */
+  const mergeSnapshot = useCallback((remote) => {
+    const next = applyRemoteSnapshot(remote)
+    if (!next) return false
+    setState(next)
+    return true
+  }, [])
+
   return {
     profiles,
     currentProfile: profiles.find((p) => p.id === currentId) || profiles[0],
@@ -144,6 +160,8 @@ export function useProgress() {
     addProfile,
     renameProfile,
     removeProfile,
+    exportSnapshot,
+    mergeSnapshot,
   }
 }
 

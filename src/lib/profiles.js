@@ -1,6 +1,8 @@
 // Multi-profile progress system for Kinderchi
 // Each profile stores its own progress under a profile-scoped key in localStorage.
 
+import { mergeSnapshots } from './merge.js'
+
 const PROFILES_KEY = 'kinderchi-profiles-v2'
 const CURRENT_KEY = 'kinderchi-current-profile-v2'
 const LEGACY_KEY = 'kinderchi-progress-v1'
@@ -210,9 +212,16 @@ export function switchProfile(id) {
 
 export function updateProfile(id, updates) {
   const profiles = loadProfiles()
-  const next = profiles.map((p) => (p.id === id ? { ...p, ...updates } : p))
+  const next = profiles.map((p) => (p.id === id ? { ...p, ...stampProfile(updates) } : p))
   saveProfiles(next)
   return next
+}
+
+// Renames/avatar changes carry a timestamp so a cloud merge can tell which
+// device edited a profile most recently.
+function stampProfile(updates) {
+  const touchesProfile = 'name' in updates || 'avatar' in updates
+  return touchesProfile ? { ...updates, updatedAt: Date.now() } : updates
 }
 
 export function deleteProfile(id) {
@@ -237,6 +246,66 @@ export function loadProgress(id) {
 
 export function saveProgress(id, progress) {
   saveProgressForProfile(id, progress)
+}
+
+// --- Cloud backup snapshot ---------------------------------------------------
+
+/**
+ * Everything that needs to travel between devices: the profile list plus
+ * progress for *every* profile. useProgress() only holds the active profile in
+ * memory, so this reads each one back from storage.
+ */
+export function exportSnapshot() {
+  const profiles = loadProfiles()
+  const progress = {}
+  for (const p of profiles) progress[p.id] = loadProgressForProfile(p.id)
+  return {
+    schema: 1,
+    app: 'chinese-quick-read',
+    updatedAt: Date.now(),
+    currentId: getCurrentId() ?? undefined,
+    profiles,
+    progress,
+  }
+}
+
+/**
+ * Merge a downloaded backup into local storage, then return the refreshed
+ * state for useProgress(). Returns null when there is nothing usable.
+ *
+ * currentId is intentionally preserved — each device keeps its own selection.
+ */
+export function mergeSnapshot(remote) {
+  if (!remote || !Array.isArray(remote.profiles) || remote.profiles.length === 0) return null
+
+  const local = exportSnapshot()
+  const merged = mergeSnapshots(local, remote)
+  if (merged.profiles.length === 0) return null
+
+  // Already identical → do not write to storage and do not signal a change.
+  // The caller treats null as "nothing to apply", which is what stops a sync
+  // from scheduling another sync forever.
+  const unchanged =
+    JSON.stringify([local.profiles, local.progress]) ===
+    JSON.stringify([merged.profiles, merged.progress])
+  if (unchanged) return null
+
+  for (const profile of merged.profiles) {
+    saveProgressForProfile(profile.id, merged.progress[profile.id] ?? freshProgress())
+  }
+  saveProfiles(merged.profiles)
+
+  let currentId = merged.currentId ?? local.currentId
+  if (!currentId || !merged.profiles.some((p) => p.id === currentId)) {
+    currentId = merged.profiles[0].id
+    setCurrentId(currentId)
+  }
+
+  return {
+    profiles: merged.profiles,
+    currentId,
+    progress: merged.progress[currentId] ?? freshProgress(),
+  }
 }
 
 export { DEFAULT_PROGRESS, AVATARS, freshProgress }
