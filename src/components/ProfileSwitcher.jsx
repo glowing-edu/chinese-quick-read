@@ -35,7 +35,7 @@ export default function ProfileSwitcher({ profiles, currentProfile, onSwitch, on
 
   const handleRename = () => {
     if (!name.trim() || !renamingId) return
-    onRename(renamingId, name)
+    onRename(renamingId, name, avatar)
     close()
   }
 

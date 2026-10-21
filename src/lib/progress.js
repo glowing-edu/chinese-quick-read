@@ -107,8 +107,9 @@ export function useProgress() {
     }))
   }, [])
 
-  const renameProfile = useCallback((id, name) => {
-    const next = updateProfile(id, { name })
+  const renameProfile = useCallback((id, name, avatar) => {
+    const updates = avatar ? { name, avatar } : { name }
+    const next = updateProfile(id, updates)
     setState((s) => ({ ...s, profiles: next }))
   }, [])
 
