@@ -25,6 +25,13 @@ export function starsForChar(progress, char) {
   return results.filter(Boolean).length
 }
 
+// The last (up to 3) game results for a character, oldest first.
+// Each entry is true (correct) or false (wrong). Missing attempts are omitted.
+export function resultsForChar(progress, char) {
+  const results = progress.charResults?.[char]
+  return Array.isArray(results) ? results : []
+}
+
 // Stars earned for a lesson (0-3): one star when every character in the lesson
 // has at least 1 star, two when every character has at least 2, etc.
 export function starsForLesson(progress, characters) {

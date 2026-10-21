@@ -6,7 +6,7 @@ import SentenceDrill from './components/SentenceDrill.jsx'
 import WordDrill from './components/WordDrill.jsx'
 import { LESSONS, buildCharLessonMap } from './data/lessons.js'
 import { useProgress } from './lib/progress.js'
-import { starsForChar, starsForLesson, totalStars, STAR_RESULTS } from './lib/profiles.js'
+import { starsForChar, starsForLesson, resultsForChar, totalStars, STAR_RESULTS } from './lib/profiles.js'
 import { canSpeak, hasChineseVoice, speak, stopSpeaking } from './lib/speech.js'
 
 const CHAR_LESSON = buildCharLessonMap()
@@ -260,6 +260,7 @@ export default function App() {
                 item={item}
                 heard={progress.heard.includes(item.char)}
                 stars={starsForChar(progress, item.char)}
+                results={resultsForChar(progress, item.char)}
                 onLearn={() => handleLearn(item)}
                 onSpeakWord={() => speak(item.word, { rate: 0.8 })}
               />

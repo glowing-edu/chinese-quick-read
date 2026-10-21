@@ -1,4 +1,11 @@
-export default function CharacterCard({ item, heard, stars = 0, onLearn, onSpeakWord }) {
+export default function CharacterCard({
+  item,
+  heard,
+  stars = 0,
+  results = [],
+  onLearn,
+  onSpeakWord,
+}) {
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
@@ -15,11 +22,15 @@ export default function CharacterCard({ item, heard, stars = 0, onLearn, onSpeak
       onClick={onLearn}
       onKeyDown={handleKeyDown}
     >
-      {heard && (
-        <span className="card__stars" title={`${stars} / 3 粒星`} aria-hidden="true">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className={`card__star${i < stars ? ' card__star--on' : ''}`}>
-              {i < stars ? '⭐' : '☆'}
+      {results.length > 0 && (
+        <span
+          className="card__stars"
+          title={`最近 ${results.length} 次：${results.map((r) => (r ? '啱' : '錯')).join('、')}`}
+          aria-hidden="true"
+        >
+          {results.map((correct, i) => (
+            <span key={i} className={`card__star${correct ? ' card__star--on' : ' card__star--miss'}`}>
+              {correct ? '⭐' : '✖'}
             </span>
           ))}
         </span>

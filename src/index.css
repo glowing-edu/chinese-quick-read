@@ -565,6 +565,11 @@ button {
   animation: pop 0.35s ease;
 }
 
+.card__star--miss {
+  color: var(--bad);
+  font-weight: 900;
+}
+
 .card__speak {
   position: absolute;
   top: 8px;
