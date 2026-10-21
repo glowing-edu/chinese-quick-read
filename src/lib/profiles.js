@@ -26,6 +26,19 @@ export function starsForChar(progress, char) {
   return results.filter(Boolean).length
 }
 
+// Stars earned for a lesson (0-3): one star when every character in the lesson
+// has at least 1 star, two when every character has at least 2, etc.
+export function starsForLesson(progress, characters) {
+  if (!Array.isArray(characters) || characters.length === 0) return 0
+  let stars = 0
+  for (let level = 1; level <= STAR_RESULTS; level++) {
+    const allReached = characters.every((c) => starsForChar(progress, c.char) >= level)
+    if (!allReached) break
+    stars = level
+  }
+  return stars
+}
+
 const AVATARS = ['🐻', '🐰', '🐱', '🐶', '🐼', '🦊', '🐸', '🦄']
 
 function generateId() {

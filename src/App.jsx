@@ -6,7 +6,7 @@ import SentenceDrill from './components/SentenceDrill.jsx'
 import WordDrill from './components/WordDrill.jsx'
 import { LESSONS, buildCharLessonMap } from './data/lessons.js'
 import { useProgress } from './lib/progress.js'
-import { starsForChar } from './lib/profiles.js'
+import { starsForChar, starsForLesson } from './lib/profiles.js'
 import { canSpeak, hasChineseVoice, speak, stopSpeaking } from './lib/speech.js'
 const CHAR_LESSON = buildCharLessonMap()
 
@@ -139,8 +139,7 @@ export default function App() {
 
       <nav className="lessons" aria-label="Lessons">
         {LESSONS.map((l) => {
-          const learned = l.characters.filter((c) => progress.heard.includes(c.char)).length
-          const done = learned >= l.characters.length
+          const lessonStars = starsForLesson(progress, l.characters)
           return (
             <button
               key={l.id}
@@ -153,11 +152,24 @@ export default function App() {
               }}
               aria-current={l.id === lessonId ? 'true' : undefined}
             >
-              <span aria-hidden="true">{done ? '✅' : `L${l.id}`}</span>
+              <span aria-hidden="true">{l.characters.length === 0 ? '📘' : `L${l.id}`}</span>
               <span>{l.title}</span>
-              <span className="lesson-pill__count">
-                {learned}/{l.characters.length}
-              </span>
+              {l.characters.length > 0 ? (
+                <span className="lesson-pill__stars" aria-label={`${lessonStars} / 3 粒星`}>
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className={`lesson-pill__star${i < lessonStars ? ' lesson-pill__star--on' : ''}`}
+                    >
+                      {i < lessonStars ? '⭐' : '☆'}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                <span className="lesson-pill__count">
+                  {l.words.length}
+                </span>
+              )}
             </button>
           )
         })}

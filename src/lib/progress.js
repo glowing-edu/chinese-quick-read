@@ -128,4 +128,4 @@ export function useProgress() {
   }
 }
 
-export { AVATARS, STAR_RESULTS, starsForChar } from './profiles.js'
+export { AVATARS, STAR_RESULTS, starsForChar, starsForLesson } from './profiles.js'

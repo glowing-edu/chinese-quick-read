@@ -359,6 +359,29 @@ button {
   opacity: 0.85;
 }
 
+.lesson-pill__stars {
+  display: inline-flex;
+  gap: 1px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.lesson-pill__star {
+  color: #cbb994;
+}
+
+.lesson-pill__star--on {
+  color: var(--gold);
+}
+
+.lesson-pill--active .lesson-pill__star {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.lesson-pill--active .lesson-pill__star--on {
+  color: var(--gold);
+}
+
 /* ===== Tabs ===== */
 
 .tabs {
