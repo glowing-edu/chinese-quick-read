@@ -9,7 +9,10 @@ export default function SentenceDrill({
   onLearnTab,
 }) {
   const total = sentences.length
-  const readCount = sentences.filter((s) => sentencesRead.includes(s.sentence)).length
+  const readCount = sentences.filter((s) => {
+    const key = Array.isArray(s.sentence) ? s.sentence.join('\n') : s.sentence
+    return sentencesRead.includes(key)
+  }).length
   const allRead = total > 0 && readCount >= total
 
   return (
@@ -32,16 +35,19 @@ export default function SentenceDrill({
       )}
 
       <div className="grid grid--sentences">
-        {sentences.map((item) => (
-          <SentenceCard
-            key={item.sentence}
-            item={item}
-            learned={heard}
-            read={sentencesRead.includes(item.sentence)}
-            lessonOf={lessonOf}
-            onRead={() => onReadSentence(item)}
-          />
-        ))}
+        {sentences.map((item) => {
+          const key = Array.isArray(item.sentence) ? item.sentence.join('\n') : item.sentence
+          return (
+            <SentenceCard
+              key={key}
+              item={item}
+              learned={heard}
+              read={sentencesRead.includes(key)}
+              lessonOf={lessonOf}
+              onRead={() => onReadSentence({ ...item, sentence: key })}
+            />
+          )
+        })}
       </div>
     </section>
   )

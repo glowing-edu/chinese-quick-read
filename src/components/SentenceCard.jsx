@@ -1,11 +1,13 @@
 // Unique Chinese characters in a sentence (punctuation excluded) —
 // a sentence unlocks once all of these have been learned.
 export function sentenceChars(sentence) {
-  return [...new Set([...sentence].filter((ch) => /[一-鿿]/.test(ch)))]
+  const text = Array.isArray(sentence) ? sentence.join('\n') : sentence || ''
+  return [...new Set([...text].filter((ch) => /[一-鿿]/.test(ch)))]
 }
 
 export default function SentenceCard({ item, learned, read, lessonOf, onRead }) {
-  const requires = sentenceChars(item.sentence)
+  const sentenceText = Array.isArray(item.sentence) ? item.sentence.join('\n') : item.sentence || ''
+  const requires = sentenceChars(sentenceText)
   const missing = requires.filter((c) => !learned.includes(c))
   const locked = missing.length > 0
 
@@ -18,8 +20,9 @@ export default function SentenceCard({ item, learned, read, lessonOf, onRead }) 
         <span className="sentence__lock" aria-hidden="true">
           🔒
         </span>
+        {item.title && <div className="sentence__title">{item.title}</div>}
         <span className="sentence__text sentence__text--dim" aria-hidden="true">
-          {item.sentence}
+          {sentenceText}
         </span>
         <span className="wordcard__hint">
           先學 · Learn first:
@@ -54,7 +57,7 @@ export default function SentenceCard({ item, learned, read, lessonOf, onRead }) 
       className={`sentence${read ? ' sentence--read' : ''}`}
       role="button"
       tabIndex={0}
-      aria-label={`句子 ${item.sentence}`}
+      aria-label={`句子 ${sentenceText}`}
       onClick={onRead}
       onKeyDown={handleKeyDown}
     >
@@ -66,9 +69,10 @@ export default function SentenceCard({ item, learned, read, lessonOf, onRead }) 
       <span className="sentence__speak" aria-hidden="true">
         🔊
       </span>
-      <span className="sentence__text">{item.sentence}</span>
-      <span className="sentence__jyut">{item.jyutping}</span>
-      <span className="sentence__meaning">{item.meaning}</span>
+      {item.title && <div className="sentence__title">{item.title}</div>}
+      <span className="sentence__text">{sentenceText}</span>
+      {item.jyutping && <span className="sentence__jyut">{item.jyutping}</span>}
+      {item.meaning && <span className="sentence__meaning">{item.meaning}</span>}
     </div>
   )
 }
