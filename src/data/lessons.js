@@ -20,6 +20,17 @@ import { CHARACTERS as lesson18Characters, WORDS as lesson18Words, SENTENCES as 
 import { CHARACTERS as lesson19Characters, WORDS as lesson19Words, SENTENCES as lesson19Sentences } from './lesson19'
 import { CHARACTERS as lesson20Characters, WORDS as lesson20Words, SENTENCES as lesson20Sentences } from './lesson20'
 import { CHARACTERS as rev2Characters, WORDS as rev2Words, SENTENCES as rev2Sentences } from './lessonRev2'
+import { CHARACTERS as lesson21Characters, WORDS as lesson21Words, SENTENCES as lesson21Sentences } from './lesson21'
+import { CHARACTERS as lesson22Characters, WORDS as lesson22Words, SENTENCES as lesson22Sentences } from './lesson22'
+import { CHARACTERS as lesson23Characters, WORDS as lesson23Words, SENTENCES as lesson23Sentences } from './lesson23'
+import { CHARACTERS as lesson24Characters, WORDS as lesson24Words, SENTENCES as lesson24Sentences } from './lesson24'
+import { CHARACTERS as lesson25Characters, WORDS as lesson25Words, SENTENCES as lesson25Sentences } from './lesson25'
+import { CHARACTERS as lesson26Characters, WORDS as lesson26Words, SENTENCES as lesson26Sentences } from './lesson26'
+import { CHARACTERS as lesson27Characters, WORDS as lesson27Words, SENTENCES as lesson27Sentences } from './lesson27'
+import { CHARACTERS as lesson28Characters, WORDS as lesson28Words, SENTENCES as lesson28Sentences } from './lesson28'
+import { CHARACTERS as lesson29Characters, WORDS as lesson29Words, SENTENCES as lesson29Sentences } from './lesson29'
+import { CHARACTERS as lesson30Characters, WORDS as lesson30Words, SENTENCES as lesson30Sentences } from './lesson30'
+import { CHARACTERS as rev3Characters, WORDS as rev3Words, SENTENCES as rev3Sentences } from './lessonRev3'
 
 // All lessons in order.
 export const LESSONS = [
@@ -45,6 +56,17 @@ export const LESSONS = [
   { id: 20, title: '第十九課', titleEn: 'Lesson 19', characters: lesson19Characters, words: lesson19Words, sentences: lesson19Sentences },
   { id: 21, title: '第二十課', titleEn: 'Lesson 20', characters: lesson20Characters, words: lesson20Words, sentences: lesson20Sentences },
   { id: 22, title: '溫習二', titleEn: 'Revision 2', characters: rev2Characters, words: rev2Words, sentences: rev2Sentences },
+  { id: 23, title: '第二十一課', titleEn: 'Lesson 21', characters: lesson21Characters, words: lesson21Words, sentences: lesson21Sentences },
+  { id: 24, title: '第二十二課', titleEn: 'Lesson 22', characters: lesson22Characters, words: lesson22Words, sentences: lesson22Sentences },
+  { id: 25, title: '第二十三課', titleEn: 'Lesson 23', characters: lesson23Characters, words: lesson23Words, sentences: lesson23Sentences },
+  { id: 26, title: '第二十四課', titleEn: 'Lesson 24', characters: lesson24Characters, words: lesson24Words, sentences: lesson24Sentences },
+  { id: 27, title: '第二十五課', titleEn: 'Lesson 25', characters: lesson25Characters, words: lesson25Words, sentences: lesson25Sentences },
+  { id: 28, title: '第二十六課', titleEn: 'Lesson 26', characters: lesson26Characters, words: lesson26Words, sentences: lesson26Sentences },
+  { id: 29, title: '第二十七課', titleEn: 'Lesson 27', characters: lesson27Characters, words: lesson27Words, sentences: lesson27Sentences },
+  { id: 30, title: '第二十八課', titleEn: 'Lesson 28', characters: lesson28Characters, words: lesson28Words, sentences: lesson28Sentences },
+  { id: 31, title: '第二十九課', titleEn: 'Lesson 29', characters: lesson29Characters, words: lesson29Words, sentences: lesson29Sentences },
+  { id: 32, title: '第三十課', titleEn: 'Lesson 30', characters: lesson30Characters, words: lesson30Words, sentences: lesson30Sentences },
+  { id: 33, title: '溫習三', titleEn: 'Revision 3', characters: rev3Characters, words: rev3Words, sentences: rev3Sentences },
 ]
 
 export function buildCharLessonMap() {
