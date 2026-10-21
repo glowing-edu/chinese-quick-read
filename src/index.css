@@ -934,12 +934,6 @@ button {
   color: var(--ink);
 }
 
-.quiz__stars {
-  font-size: 26px;
-  font-weight: 900;
-  color: #b8860b;
-}
-
 .quiz__result-actions {
   display: flex;
   flex-wrap: wrap;

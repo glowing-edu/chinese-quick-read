@@ -47,10 +47,6 @@ export function useProgress() {
     )
   }, [])
 
-  const addStars = useCallback((amount) => {
-    setProgress((prev) => ({ ...prev, stars: Math.max(0, prev.stars + amount) }))
-  }, [])
-
   // Record the latest game result for a character, keeping only the last 3.
   const recordCharResult = useCallback((char, correct) => {
     setProgress((prev) => {
@@ -117,7 +113,6 @@ export function useProgress() {
     markHeard,
     markWordRead,
     markSentenceRead,
-    addStars,
     recordCharResult,
     recordQuiz,
     reset,
@@ -128,4 +123,4 @@ export function useProgress() {
   }
 }
 
-export { AVATARS, STAR_RESULTS, starsForChar, starsForLesson } from './profiles.js'
+export { AVATARS, STAR_RESULTS, starsForChar, starsForLesson, totalStars } from './profiles.js'

@@ -6,9 +6,13 @@ import SentenceDrill from './components/SentenceDrill.jsx'
 import WordDrill from './components/WordDrill.jsx'
 import { LESSONS, buildCharLessonMap } from './data/lessons.js'
 import { useProgress } from './lib/progress.js'
-import { starsForChar, starsForLesson } from './lib/profiles.js'
+import { starsForChar, starsForLesson, totalStars, STAR_RESULTS } from './lib/profiles.js'
 import { canSpeak, hasChineseVoice, speak, stopSpeaking } from './lib/speech.js'
+
 const CHAR_LESSON = buildCharLessonMap()
+
+// Every distinct character across all lessons — used for the global star total.
+const ALL_CHARS = [...new Set(LESSONS.flatMap((l) => l.characters.map((c) => c.char)))]
 
 export default function App() {
   const [lessonId, setLessonId] = useState(LESSONS[0].id)
@@ -21,7 +25,6 @@ export default function App() {
     markHeard,
     markWordRead,
     markSentenceRead,
-    addStars,
     recordCharResult,
     recordQuiz,
     reset,
@@ -60,6 +63,10 @@ export default function App() {
   const heardCount = lesson.characters.filter((c) => progress.heard.includes(c.char)).length
   const complete = heardCount >= total
   const isRevision = total === 0
+
+  // Global star total across all lessons, capped at 3 stars per character.
+  const earnedStars = useMemo(() => totalStars(progress, ALL_CHARS), [progress])
+  const maxStars = ALL_CHARS.length * STAR_RESULTS
 
   const switchTab = (next) => {
     stopSpeaking()
@@ -128,7 +135,7 @@ export default function App() {
             onDelete={removeProfile}
           />
           <span className="badge-stars" title="星星 Stars earned">
-            ⭐ {progress.stars}
+            ⭐ {earnedStars} / {maxStars}
           </span>
         </div>
       </header>
@@ -293,7 +300,6 @@ export default function App() {
             characters={lesson.characters}
             best={progress.quizBest}
             starsFor={(char) => starsForChar(progress, char)}
-            addStars={addStars}
             recordCharResult={recordCharResult}
             recordQuiz={recordQuiz}
             onBack={() => switchTab('learn')}

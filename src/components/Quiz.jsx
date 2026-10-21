@@ -46,7 +46,6 @@ export default function Quiz({
   characters,
   best,
   starsFor,
-  addStars,
   recordCharResult,
   recordQuiz,
   onBack,
@@ -96,7 +95,6 @@ export default function Quiz({
     recordCharResult(question.answer.char, correct)
     if (correct) {
       setScore(nextScore)
-      addStars(1)
     }
     setTimer(
       setTimeout(() => {
@@ -159,7 +157,6 @@ export default function Quiz({
                 ? '好嘢！繼續努力！Great job!'
                 : '唔緊要，再試一次！Try again!'}
           </p>
-          <p className="quiz__stars">⭐ +{score}</p>
           <div className="quiz__result-actions">
             <button type="button" className="btn btn--primary" onClick={start}>
               🔄 再玩一次 Play again

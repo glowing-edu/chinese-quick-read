@@ -10,7 +10,6 @@ const DEFAULT_PROGRESS = {
   heard: [], // characters learned
   wordsRead: [], // words read
   sentencesRead: [], // sentences read
-  stars: 0,
   quizBest: null,
   quizzesPlayed: 0,
   charResults: {}, // { [char]: boolean[] } — last 3 quiz results per character
@@ -37,6 +36,12 @@ export function starsForLesson(progress, characters) {
     stars = level
   }
   return stars
+}
+
+// Total stars across a list of characters, capped at 3 per character.
+export function totalStars(progress, characters) {
+  if (!Array.isArray(characters)) return 0
+  return characters.reduce((sum, char) => sum + starsForChar(progress, char), 0)
 }
 
 const AVATARS = ['🐻', '🐰', '🐱', '🐶', '🐼', '🦊', '🐸', '🦄']
