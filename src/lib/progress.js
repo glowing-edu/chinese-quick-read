@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   DEFAULT_PROGRESS,
   AVATARS,
@@ -9,6 +9,7 @@ import {
   updateProfile,
   deleteProfile as deleteProfileApi,
   saveProgress,
+  loadProgress,
 } from './profiles.js'
 
 export function useProgress() {
@@ -16,62 +17,83 @@ export function useProgress() {
 
   const { profiles, currentId } = state
   const [progress, setProgress] = useState(state.progress)
+  const currentIdRef = useRef(currentId)
+
+  useEffect(() => {
+    currentIdRef.current = currentId
+  }, [currentId])
 
   // Sync when current profile changes
   useEffect(() => {
-    const p = state.progress
+    const p = loadProgress(currentId)
     setProgress(p)
-  }, [state.currentId])
+  }, [currentId])
 
   useEffect(() => {
     saveProgress(currentId, progress)
   }, [currentId, progress])
 
   const markHeard = useCallback((char) => {
-    setProgress((prev) =>
-      prev.heard.includes(char) ? prev : { ...prev, heard: [...prev.heard, char] },
-    )
+    const id = currentIdRef.current
+    setProgress((prev) => {
+      if (prev.heard.includes(char)) return prev
+      const next = { ...prev, heard: [...prev.heard, char] }
+      saveProgress(id, next)
+      return next
+    })
   }, [])
 
   const markWordRead = useCallback((word) => {
-    setProgress((prev) =>
-      prev.wordsRead.includes(word) ? prev : { ...prev, wordsRead: [...prev.wordsRead, word] },
-    )
+    const id = currentIdRef.current
+    setProgress((prev) => {
+      if (prev.wordsRead.includes(word)) return prev
+      const next = { ...prev, wordsRead: [...prev.wordsRead, word] }
+      saveProgress(id, next)
+      return next
+    })
   }, [])
 
   const markSentenceRead = useCallback((sentence) => {
-    setProgress((prev) =>
-      prev.sentencesRead.includes(sentence)
-        ? prev
-        : { ...prev, sentencesRead: [...prev.sentencesRead, sentence] },
-    )
+    const id = currentIdRef.current
+    setProgress((prev) => {
+      if (prev.sentencesRead.includes(sentence)) return prev
+      const next = { ...prev, sentencesRead: [...prev.sentencesRead, sentence] }
+      saveProgress(id, next)
+      return next
+    })
   }, [])
 
   // Record the latest game result for a character, keeping only the last 3.
   const recordCharResult = useCallback((char, correct) => {
+    const id = currentIdRef.current
     setProgress((prev) => {
       const prevResults = Array.isArray(prev.charResults?.[char]) ? prev.charResults[char] : []
       const nextResults = [...prevResults, Boolean(correct)].slice(-STAR_RESULTS)
-      return {
+      const next = {
         ...prev,
         charResults: { ...prev.charResults, [char]: nextResults },
       }
+      saveProgress(id, next)
+      return next
     })
   }, [])
 
   const recordQuiz = useCallback((correct, total) => {
+    const id = currentIdRef.current
     setProgress((prev) => {
       const best = prev.quizBest
       const isBetter = !best || correct > best.correct
-      return {
+      const next = {
         ...prev,
         quizzesPlayed: prev.quizzesPlayed + 1,
         quizBest: isBetter ? { correct, total } : best,
       }
+      saveProgress(id, next)
+      return next
     })
   }, [])
 
-  const reset = useCallback(() => setProgress(DEFAULT_PROGRESS), [])
+  const reset = useCallback(() => setProgress({ ...DEFAULT_PROGRESS }), [])
 
   const switchProfile = useCallback((id) => {
     const res = switchProfileApi(id)
@@ -83,8 +105,10 @@ export function useProgress() {
 
   const addProfile = useCallback((name, avatar) => {
     const res = createProfileApi(name, avatar)
-    setState((s) => ({ ...s, profiles: res.profiles, currentId: res.currentId }))
-    setProgress(res.progress)
+    if (res) {
+      setState((s) => ({ ...s, profiles: res.profiles, currentId: res.currentId }))
+      setProgress(res.progress)
+    }
   }, [])
 
   const renameProfile = useCallback((id, name) => {
