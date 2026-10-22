@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import CharacterCard from './components/CharacterCard.jsx'
 import ProfileSwitcher from './components/ProfileSwitcher.jsx'
+import PuterSync from './components/PuterSync.jsx'
 import Quiz from './components/Quiz.jsx'
 import SentenceDrill from './components/SentenceDrill.jsx'
 import WordDrill from './components/WordDrill.jsx'
@@ -123,6 +124,7 @@ export default function App() {
           </div>
         </div>
         <div className="topbar__actions">
+          <PuterSync />
           <ProfileSwitcher
             profiles={profiles}
             currentProfile={currentProfile}
