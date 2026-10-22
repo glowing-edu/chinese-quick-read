@@ -10,6 +10,7 @@ import {
   createSnapshot,
   mergeSnapshotsForUpload,
   applySnapshotToLocal,
+  smartSync,
 } from '../lib/puterSync.js'
 
 export function usePuterSync() {
@@ -66,22 +67,11 @@ export function usePuterSync() {
     setSyncing(true)
     setError(null)
     try {
-      // Get local snapshot
-      const localSnapshot = createSnapshot()
-      if (!localSnapshot) throw new Error('Failed to create local snapshot')
-
-      // Load from cloud
-      const cloudSnapshot = await loadFromPuter()
-
-      if (cloudSnapshot) {
-        // Merge: upload local as new profiles (don't overwrite cloud)
-        const merged = mergeSnapshotsForUpload(localSnapshot, cloudSnapshot)
-        await saveToPuter(merged)
-        setLastSync(Date.now())
-      } else {
-        // No cloud data, just upload
-        await saveToPuter(localSnapshot)
-        setLastSync(Date.now())
+      const result = await smartSync()
+      setLastSync(Date.now())
+      if (result.action === 'none') {
+        setError('已是最新狀態 Up to date')
+        setTimeout(() => setError(null), 2000)
       }
     } catch (err) {
       setError(err.message)

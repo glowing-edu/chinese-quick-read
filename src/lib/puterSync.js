@@ -276,3 +276,100 @@ export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
     return false
   }
 }
+
+const SYNC_STATE_KEY = 'kinderchi-puter-sync-state'
+
+// Get fingerprint of local data
+function getLocalFingerprint(snapshot) {
+  if (!snapshot) return null
+  try {
+    // Only care about profiles and progress, not timestamps
+    return JSON.stringify([snapshot.profiles, snapshot.progress])
+  } catch {
+    return null
+  }
+}
+
+// Get sync state
+export function getSyncState() {
+  try {
+    const raw = localStorage.getItem(SYNC_STATE_KEY)
+    return raw ? JSON.parse(raw) : { lastCloudUpdatedAt: null, lastLocalFingerprint: null }
+  } catch {
+    return { lastCloudUpdatedAt: null, lastLocalFingerprint: null }
+  }
+}
+
+// Save sync state
+function saveSyncState(state) {
+  try {
+    localStorage.setItem(SYNC_STATE_KEY, JSON.stringify(state))
+  } catch {
+    // ignore
+  }
+}
+
+// Smart sync: check timestamps/fingerprints to avoid unnecessary downloads
+export async function smartSync() {
+  if (!isPuterAvailable()) throw new Error('Puter not available')
+  const signedIn = await isSignedIn()
+  if (!signedIn) throw new Error('Not signed in')
+  
+  const localSnapshot = createSnapshot()
+  if (!localSnapshot) throw new Error('Failed to create local snapshot')
+  
+  const localFingerprint = getLocalFingerprint(localSnapshot)
+  const syncState = getSyncState()
+  
+  // Download cloud to check
+  const cloudSnapshot = await loadFromPuter()
+  
+  if (!cloudSnapshot) {
+    // No cloud data, just upload
+    await saveToPuter(localSnapshot)
+    saveSyncState({
+      lastCloudUpdatedAt: localSnapshot.updatedAt,
+      lastLocalFingerprint: localFingerprint,
+    })
+    return { action: 'uploaded', changed: true }
+  }
+  
+  const cloudUpdatedAt = cloudSnapshot.updatedAt
+  const cloudFingerprint = getLocalFingerprint(cloudSnapshot)
+  
+  // Check if anything changed
+  if (cloudUpdatedAt === syncState.lastCloudUpdatedAt && localFingerprint === syncState.lastLocalFingerprint) {
+    // Nothing changed anywhere
+    return { action: 'none', changed: false }
+  }
+  
+  if (cloudUpdatedAt === syncState.lastCloudUpdatedAt && localFingerprint !== syncState.lastLocalFingerprint) {
+    // Only local changed, cloud unchanged - can upload directly without merge
+    await saveToPuter(localSnapshot)
+    saveSyncState({
+      lastCloudUpdatedAt: localSnapshot.updatedAt,
+      lastLocalFingerprint: localFingerprint,
+    })
+    return { action: 'uploaded_local_only', changed: true }
+  }
+  
+  if (cloudUpdatedAt !== syncState.lastCloudUpdatedAt && localFingerprint === syncState.lastLocalFingerprint) {
+    // Only cloud changed, local unchanged - just download
+    const ok = applySnapshotToLocal(cloudSnapshot, true)
+    saveSyncState({
+      lastCloudUpdatedAt: cloudUpdatedAt,
+      lastLocalFingerprint: getLocalFingerprint(createSnapshot()),
+    })
+    if (ok) window.location.reload()
+    return { action: 'downloaded_cloud_only', changed: true }
+  }
+  
+  // Both changed - need full merge
+  const merged = mergeSnapshotsForUpload(localSnapshot, cloudSnapshot)
+  await saveToPuter(merged)
+  saveSyncState({
+    lastCloudUpdatedAt: merged.updatedAt,
+    lastLocalFingerprint: getLocalFingerprint(merged),
+  })
+  return { action: 'merged', changed: true }
+}
