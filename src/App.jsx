@@ -29,11 +29,17 @@ export default function App() {
     recordCharResult,
     recordQuiz,
     reset,
-    switchProfile,
+    switchProfile: switchProfileBase,
     addProfile,
     renameProfile,
     removeProfile,
   } = useProgress()
+
+  const switchProfile = (id) => {
+    stopSpeaking()
+    setTab('learn')
+    switchProfileBase(id)
+  }
 
   const lesson = LESSONS.find((l) => l.id === lessonId) ?? LESSONS[0]
   const sentences = lesson.sentences ?? []
@@ -293,6 +299,7 @@ export default function App() {
       {activeTab === 'game' && (
         <main>
           <Quiz
+            key={currentProfile?.id}
             characters={lesson.characters}
             best={progress.quizBest}
             starsFor={(char) => starsForChar(progress, char)}

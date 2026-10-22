@@ -60,7 +60,7 @@ export default function WordCard({ item, learned, read, lessonOf, onRead }) {
       <span className="wordcard__speak" aria-hidden="true">
         🔊
       </span>
-      <span className="wordcard__text">
+      <span className={`wordcard__text${item.word.length >= 4 ? ' wordcard__text--long' : ''}`}>
         {[...item.word].map((ch, i) => (
           <span key={i}>{ch}</span>
         ))}
