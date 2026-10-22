@@ -1,7 +1,6 @@
 // Puter.js sync for Kinderchi
 // Signs in with Puter's account system and stores progress in the user's
-// own Puter space. On first sign-in from a new browser, local profiles are
-// treated as NEW profiles and uploaded (never overwriting existing cloud data).
+// own Puter space.
 
 const PUTER_KEY = 'kinderchi-profiles-backup-v1'
 
@@ -29,7 +28,6 @@ export async function getUser() {
 
 export async function signIn() {
   if (!isPuterAvailable()) throw new Error('Puter not available')
-  // Must be called from user action
   const res = await window.puter.auth.signIn()
   return res
 }
@@ -48,7 +46,6 @@ export async function loadFromPuter() {
   try {
     const data = await window.puter.kv.get(PUTER_KEY)
     if (!data) return null
-    // puter.kv.get returns the parsed value if it was stored as object
     if (typeof data === 'string') {
       return JSON.parse(data)
     }
@@ -62,7 +59,6 @@ export async function loadFromPuter() {
 export async function saveToPuter(snapshot) {
   if (!isPuterAvailable()) throw new Error('Puter not available')
   try {
-    // Store as object - Puter will serialize it
     await window.puter.kv.set(PUTER_KEY, snapshot)
     return true
   } catch (err) {
@@ -104,43 +100,96 @@ export function createSnapshot() {
   }
 }
 
-// Merge: treat local profiles as NEW profiles when syncing to cloud
-// Don't overwrite existing cloud profiles; add local ones with new IDs if they conflict
+function unionArrays(a = [], b = []) {
+  const seen = new Set(a)
+  const result = [...a]
+  for (const item of b) {
+    if (!seen.has(item)) {
+      seen.add(item)
+      result.push(item)
+    }
+  }
+  return result
+}
+
+function countStars(results) {
+  if (!Array.isArray(results)) return 0
+  return results.filter(Boolean).length
+}
+
+// Merge progress for the same profile ID - combine progress from both devices
+function mergeProgress(localProg = {}, cloudProg = {}) {
+  const result = {}
+  
+  result.heard = unionArrays(localProg.heard, cloudProg.heard)
+  result.wordsRead = unionArrays(localProg.wordsRead, cloudProg.wordsRead)
+  result.sentencesRead = unionArrays(localProg.sentencesRead, cloudProg.sentencesRead)
+  
+  result.quizzesPlayed = Math.max(localProg.quizzesPlayed || 0, cloudProg.quizzesPlayed || 0)
+  
+  const localBest = localProg.quizBest
+  const cloudBest = cloudProg.quizBest
+  if (localBest && cloudBest) {
+    if (localBest.correct > cloudBest.correct || (localBest.correct === cloudBest.correct && localBest.total >= cloudBest.total)) {
+      result.quizBest = localBest
+    } else {
+      result.quizBest = cloudBest
+    }
+  } else {
+    result.quizBest = localBest || cloudBest || null
+  }
+  
+  const allChars = new Set([
+    ...Object.keys(localProg.charResults || {}),
+    ...Object.keys(cloudProg.charResults || {}),
+  ])
+  result.charResults = {}
+  for (const char of allChars) {
+    const localRes = localProg.charResults?.[char]
+    const cloudRes = cloudProg.charResults?.[char]
+    if (!Array.isArray(localRes)) {
+      result.charResults[char] = Array.isArray(cloudRes) ? cloudRes : []
+    } else if (!Array.isArray(cloudRes)) {
+      result.charResults[char] = localRes
+    } else {
+      result.charResults[char] = countStars(cloudRes) > countStars(localRes) ? cloudRes : localRes
+    }
+  }
+  
+  return result
+}
+
+// Upload local progress to cloud - merge if same profile ID exists
 export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
   if (!cloudSnapshot) return localSnapshot
   if (!localSnapshot) return cloudSnapshot
   
-  // Start with cloud data as base
   const result = {
     schema: 1,
     app: 'kinderchi',
     updatedAt: Date.now(),
     profiles: [...(cloudSnapshot.profiles || [])],
-    progress: { ...(cloudSnapshot.progress || {}) },
-    currentId: cloudSnapshot.currentId, // Keep cloud's current profile selection? Or keep local? "login in new browser with use data" - probably want to use cloud's state
+    progress: JSON.parse(JSON.stringify(cloudSnapshot.progress || {})),
+    currentId: cloudSnapshot.currentId,
   }
   
-  const cloudProfileIds = new Set(result.profiles.map(p => p.id))
+  const cloudProfileMap = new Map()
+  for (const p of result.profiles) {
+    cloudProfileMap.set(p.id, p)
+  }
   
-  // For each local profile, if it doesn't exist in cloud, add it as a NEW profile
-  // If it does exist, we need to be careful - but per requirements "treat local profile as new profile"
-  // So even if ID conflicts, create a new profile for local data
   for (const localProfile of localSnapshot.profiles || []) {
-    if (cloudProfileIds.has(localProfile.id)) {
-      // ID conflict - create as new profile with new ID
-      const newId = `p_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
-      const newProfile = {
-        ...localProfile,
-        id: newId,
-        name: localProfile.name + ' (本機)', // mark as local copy
-        createdAt: Date.now(),
-      }
-      result.profiles.push(newProfile)
-      if (localSnapshot.progress[localProfile.id]) {
-        result.progress[newId] = localSnapshot.progress[localProfile.id]
+    if (cloudProfileMap.has(localProfile.id)) {
+      // Same profile ID exists - MERGE progress, don't create duplicate
+      const localProg = localSnapshot.progress[localProfile.id]
+      const cloudProg = result.progress[localProfile.id]
+      if (localProg && cloudProg) {
+        result.progress[localProfile.id] = mergeProgress(localProg, cloudProg)
+      } else if (localProg && !cloudProg) {
+        result.progress[localProfile.id] = localProg
       }
     } else {
-      // New profile, add it
+      // New profile not in cloud - add it
       result.profiles.push({ ...localProfile })
       if (localSnapshot.progress[localProfile.id]) {
         result.progress[localProfile.id] = localSnapshot.progress[localProfile.id]
@@ -151,10 +200,7 @@ export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
   return result
 }
 
-// Apply cloud snapshot to localStorage - but be smart about it
-// If local has profiles not in cloud, we need to decide - but per requirements
-// "when login in new browser with use data, treat local profile as new profile and sync to puter rater than overwrite what we have in puter"
-// So when downloading from Puter to this browser, merge cloud into local but preserve local as new profiles
+// Download from cloud to local - merge if same profile ID exists
 export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
   if (!cloudSnapshot) return false
   
@@ -172,7 +218,6 @@ export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
     }
     
     if (!preserveLocalAsNew || localProfiles.length === 0) {
-      // Just apply cloud data
       localStorage.setItem(PROFILES_KEY, JSON.stringify(cloudSnapshot.profiles || []))
       if (cloudSnapshot.currentId) {
         localStorage.setItem(CURRENT_KEY, cloudSnapshot.currentId)
@@ -185,29 +230,29 @@ export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
       return true
     }
     
-    // Merge: keep cloud profiles, add local profiles as new ones
     const result = {
       profiles: [...(cloudSnapshot.profiles || [])],
-      progress: { ...(cloudSnapshot.progress || {}) },
+      progress: JSON.parse(JSON.stringify(cloudSnapshot.progress || {})),
       currentId: cloudSnapshot.currentId,
     }
     
-    const cloudProfileIds = new Set(result.profiles.map(p => p.id))
+    const cloudProfileMap = new Map()
+    for (const p of result.profiles) {
+      cloudProfileMap.set(p.id, p)
+    }
     
     for (const localProfile of localProfiles) {
-      if (cloudProfileIds.has(localProfile.id)) {
-        // Create as new profile
-        const newId = `p_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
-        result.profiles.push({
-          ...localProfile,
-          id: newId,
-          name: localProfile.name + ' (本機)',
-          createdAt: Date.now(),
-        })
-        if (localProgress[localProfile.id]) {
-          result.progress[newId] = localProgress[localProfile.id]
+      if (cloudProfileMap.has(localProfile.id)) {
+        // Same profile ID exists - MERGE progress
+        const localProg = localProgress[localProfile.id]
+        const cloudProg = result.progress[localProfile.id]
+        if (localProg && cloudProg) {
+          result.progress[localProfile.id] = mergeProgress(localProg, cloudProg)
+        } else if (localProg && !cloudProg) {
+          result.progress[localProfile.id] = localProg
         }
       } else {
+        // New profile not in cloud - add it as new
         result.profiles.push(localProfile)
         if (localProgress[localProfile.id]) {
           result.progress[localProfile.id] = localProgress[localProfile.id]
