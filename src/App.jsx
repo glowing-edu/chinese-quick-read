@@ -182,7 +182,7 @@ export default function App() {
                 if (totalItems > 0 && done >= totalItems) {
                   return <span className="lesson-pill__count">✓</span>
                 }
-                return <span className="lesson-pill__count">{totalItems > 0 ? done + '/' + totalItems : ''}</span>
+                return null
               })()}
             </button>
           )
