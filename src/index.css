@@ -499,6 +499,16 @@ button {
   gap: 14px;
 }
 
+.grid--words {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 640px) {
+  .grid--words {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .card {
   position: relative;
   background: var(--card);

@@ -40,7 +40,7 @@ export default function WordDrill({
         </div>
       )}
 
-      <div className="grid">
+      <div className="grid grid--words">
         {words.map((item) => (
           <WordCard
             key={item.word}
