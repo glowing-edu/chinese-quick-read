@@ -124,8 +124,8 @@ export default function App() {
             <p className="brand__sub">
               幼稚園廣東話 · {lesson.title} {lesson.titleEn}
               {!isRevision && ` · ${total} 個生字`}
-              {lesson.words.length > 0 && ` · ${lesson.words.length} 個詞語`}
-              {sentences.length > 0 && ` · ${sentences.length} 個句子`}
+              {!isRevision && lesson.words.length > 0 && ` · ${lesson.words.length} 個詞語`}
+              {!isRevision && sentences.length > 0 && ` · ${sentences.length} 個句子`}
             </p>
           </div>
         </div>
@@ -169,11 +169,21 @@ export default function App() {
                     </span>
                   ))}
                 </span>
-              ) : (
-                <span className="lesson-pill__count">
-                  {l.words.length}
-                </span>
-              )}
+              ) : (() => {
+                const rWords = l.words || []
+                const rSents = l.sentences || []
+                const totalItems = rWords.length + rSents.length
+                const doneWords = rWords.filter((w) => progress.wordsRead?.includes(w.word)).length
+                const doneSents = rSents.filter((s) => {
+                  const key = Array.isArray(s.sentence) ? s.sentence.join('\n') : s.sentence
+                  return progress.sentencesRead?.includes(key)
+                }).length
+                const done = doneWords + doneSents
+                if (totalItems > 0 && done >= totalItems) {
+                  return <span className="lesson-pill__count">✓</span>
+                }
+                return <span className="lesson-pill__count">{totalItems > 0 ? done + '/' + totalItems : ''}</span>
+              })()}
             </button>
           )
         })}
