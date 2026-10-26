@@ -154,7 +154,7 @@ export default function App() {
           </div>
         </div>
         <div className="topbar__actions">
-          <PuterSync />
+          <PuterSync profiles={profiles} onDeleteProfile={removeProfile} />
           <ProfileSwitcher
             profiles={profiles}
             deletedProfiles={deletedProfiles}

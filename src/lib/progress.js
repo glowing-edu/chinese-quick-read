@@ -123,7 +123,7 @@ export function useProgress() {
 
   const removeProfile = useCallback((id) => {
     const res = deleteProfileApi(id)
-    if (!res) return
+    if (!res) return false
     setState((s) => ({
       ...s,
       profiles: res.profiles,
@@ -131,6 +131,7 @@ export function useProgress() {
       currentId: res.currentId,
       progress: res.progress,
     }))
+    return true
   }, [])
 
   const restoreProfile = useCallback((id) => {

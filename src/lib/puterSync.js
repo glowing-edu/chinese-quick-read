@@ -3,9 +3,7 @@
 // own Puter space.
 
 const PUTER_KEY = 'kinderchi-profiles-backup-v1'
-const HISTORY_KEY = 'kinderchi-profiles-history-v1'
 const SYNC_STATE_KEY = 'kinderchi-puter-sync-state'
-const MAX_HISTORY = 6
 
 const PROFILES_KEY = 'kinderchi-profiles-v2'
 const CURRENT_KEY = 'kinderchi-current-profile-v2'
@@ -55,23 +53,21 @@ export async function signOut() {
   }
 }
 
+// Strict read: returns null only when the key genuinely does not exist.
+// A network/auth/parse error is thrown, so it can never be mistaken for an
+// empty cloud (which would let a push overwrite real cloud data).
 async function readKey(key) {
-  if (!isPuterAvailable()) return null
-  try {
-    const data = await window.puter.kv.get(key)
-    if (!data) return null
-    if (typeof data === 'string') {
-      try {
-        return JSON.parse(data)
-      } catch {
-        return data
-      }
+  if (!isPuterAvailable()) throw new Error('Puter not available')
+  const data = await window.puter.kv.get(key)
+  if (data === null || data === undefined) return null
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data)
+    } catch {
+      throw new Error('Cloud data is not valid JSON; refusing to overwrite it')
     }
-    return data
-  } catch (err) {
-    console.error(`Failed to load ${key} from Puter:`, err)
-    return null
   }
+  return data
 }
 
 async function writeKey(key, value) {
@@ -82,95 +78,63 @@ async function writeKey(key, value) {
 
 export async function loadFromPuter() {
   const data = await readKey(PUTER_KEY)
-  if (!data || typeof data !== 'object' || !Array.isArray(data.profiles)) return null
+  if (data === null) return null
+  if (typeof data !== 'object' || !Array.isArray(data.profiles)) {
+    throw new Error('Cloud data is invalid; refusing to overwrite it')
+  }
   return data
 }
 
-// Never write an empty snapshot over the cloud data.
-export async function saveToPuter(snapshot, { backup = true } = {}) {
+// Write a snapshot to the cloud, but never let it drop a profile that is
+// already there. This is the last line of defence: every profile removal must
+// be an explicit local action, never a side effect of a sync bug.
+export async function saveToPuter(snapshot) {
   if (!isPuterAvailable()) throw new Error('Puter not available')
   if (!snapshot || !Array.isArray(snapshot.profiles)) throw new Error('Invalid snapshot')
+  if (snapshot.profiles.length === 0) {
+    throw new Error('Refusing to write an empty profile list to the cloud')
+  }
 
-  if (backup) {
-    // Keep the snapshot we're about to replace so it can be restored later.
-    const existing = await loadFromPuter()
-    if (existing && existing.updatedAt !== snapshot.updatedAt) {
-      await pushHistory(existing)
+  const existing = await loadFromPuter()
+  if (existing) {
+    const nextIds = new Set(snapshot.profiles.map((p) => p.id))
+    const missing = existing.profiles.filter((p) => !nextIds.has(p.id))
+    if (missing.length > 0) {
+      const names = missing.map((p) => p.name || p.id).join('、')
+      throw new Error(`Refusing to remove cloud profiles: ${names}`)
     }
   }
 
-  try {
-    await writeKey(PUTER_KEY, snapshot)
-    return true
-  } catch (err) {
-    console.error('Failed to save to Puter:', err)
-    throw err
-  }
-}
-
-async function loadCloudHistory() {
-  const data = await readKey(HISTORY_KEY)
-  return Array.isArray(data) ? data : []
-}
-
-async function pushHistory(snapshot) {
-  try {
-    const history = await loadCloudHistory()
-    const fp = getFingerprint(snapshot)
-    const without = history.filter((h) => h?.fingerprint !== fp)
-    const entry = { fingerprint: fp, savedAt: Date.now(), snapshot }
-    await writeKey(HISTORY_KEY, [entry, ...without].slice(0, MAX_HISTORY))
-  } catch (err) {
-    console.warn('Failed to store cloud backup:', err)
-  }
-}
-
-// Backups of previous cloud snapshots (newest first).
-export async function loadCloudBackups() {
-  const history = await loadCloudHistory()
-  return history.map((entry, index) => ({
-    index,
-    savedAt: entry.savedAt || entry.snapshot?.updatedAt || 0,
-    profiles: (entry.snapshot?.profiles || []).map((p) => ({
-      id: p.id,
-      name: p.name,
-      avatar: p.avatar,
-    })),
-    updatedAt: entry.snapshot?.updatedAt || 0,
-  }))
-}
-
-// Replace local (and cloud) with a previous cloud snapshot.
-export async function restoreCloudBackup(index) {
-  const history = await loadCloudHistory()
-  const snapshot = history[index]?.snapshot
-  if (!snapshot || !Array.isArray(snapshot.profiles)) return { ok: false, changed: false }
-  const result = applySnapshotToLocal(snapshot, false)
-  if (!result.ok) return result
-  try {
-    await saveToPuter(snapshot, { backup: true })
-  } catch (err) {
-    console.error('Failed to restore backup to cloud:', err)
-  }
-  saveSyncState({
-    lastCloudUpdatedAt: snapshot.updatedAt,
-    lastLocalFingerprint: getFingerprint(createSnapshot()),
-  })
-  return result
+  await writeKey(PUTER_KEY, snapshot)
+  return true
 }
 
 // Summary of what's currently in the cloud, for the sync panel.
 export async function getCloudSummary() {
   const snapshot = await loadFromPuter()
   if (!snapshot) return null
+  const active = snapshot.profiles.filter((p) => !p.deletedAt)
   return {
     updatedAt: snapshot.updatedAt || 0,
-    profiles: snapshot.profiles.map((p) => ({
+    profiles: active.map((p) => ({
       id: p.id,
       name: p.name,
       avatar: p.avatar,
     })),
+    deletedCount: snapshot.profiles.length - active.length,
   }
+}
+
+// Local profiles that do not exist in the cloud at all. These are the profiles
+// the user must explicitly keep or delete before a manual sync.
+export async function getLocalOnlyProfiles() {
+  const cloud = await loadFromPuter()
+  if (!cloud || cloud.profiles.length === 0) return []
+  const cloudIds = new Set(cloud.profiles.map((p) => p.id))
+  const local = readLocal()
+  return local.profiles
+    .filter((p) => !p.deletedAt && !cloudIds.has(p.id))
+    .map((p) => ({ id: p.id, name: p.name, avatar: p.avatar }))
 }
 
 // Create a snapshot from current localStorage state
@@ -301,8 +265,10 @@ export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
       } else if (localProg && !cloudProg) {
         result.progress[localProfile.id] = localProg
       }
-    } else {
-      // New profile not in cloud - add it
+    } else if (!localProfile.deletedAt) {
+      // New active profile not in cloud - add it. A profile deleted locally
+      // that has never existed in the cloud is never uploaded as a new cloud
+      // record; it only lives (and expires) on this device.
       cloudProfileMap.set(localProfile.id, localProfile)
       cloudProfileIndex.set(localProfile.id, result.profiles.length)
       result.profiles.push({ ...localProfile })
@@ -468,8 +434,11 @@ export async function smartSync({ push = true, force = false } = {}) {
 
   if (!cloudSnapshot) {
     if (!push) return { action: 'none', changed: false }
-    // Nothing in the cloud yet - this device seeds it.
-    await saveToPuter(localSnapshot, { backup: false })
+    if (localSnapshot.profiles.length === 0) {
+      throw new Error('Refusing to create an empty cloud profile list')
+    }
+    // Confirmed missing cloud - this device seeds it.
+    await saveToPuter(localSnapshot)
     saveSyncState({
       lastCloudUpdatedAt: localSnapshot.updatedAt,
       lastLocalFingerprint: localFingerprint,
@@ -510,8 +479,9 @@ export async function smartSync({ push = true, force = false } = {}) {
     merged.currentId = merged.profiles.find((p) => !p.deletedAt)?.id || merged.profiles[0]?.id
   }
   await saveToPuter(merged)
-  // Bring cloud-only profiles/progress back to this device as well.
-  const result = applySnapshotToLocal(merged, false)
+  // Bring cloud-only profiles/progress back to this device as well. Merge
+  // (rather than replace) so a local-only profile can never be dropped here.
+  const result = applySnapshotToLocal(merged, true)
   saveSyncState({
     lastCloudUpdatedAt: merged.updatedAt,
     lastLocalFingerprint: getFingerprint(createSnapshot()),
