@@ -11,6 +11,13 @@ const PROFILES_KEY = 'kinderchi-profiles-v2'
 const CURRENT_KEY = 'kinderchi-current-profile-v2'
 const PROGRESS_PREFIX = 'kinderchi-progress-v2-'
 
+// Timestamp of the last change to a profile record. Newer wins when merging, so
+// a delete/restore/rename is not undone by an older copy from another device.
+function profileTimestamp(profile) {
+  if (!profile) return 0
+  return profile.updatedAt || profile.deletedAt || profile.createdAt || 0
+}
+
 export function isPuterAvailable() {
   return typeof window !== 'undefined' && typeof window.puter !== 'undefined'
 }
@@ -273,13 +280,20 @@ export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
   }
 
   const cloudProfileMap = new Map()
-  for (const p of result.profiles) {
+  const cloudProfileIndex = new Map()
+  result.profiles.forEach((p, i) => {
     cloudProfileMap.set(p.id, p)
-  }
+    cloudProfileIndex.set(p.id, i)
+  })
 
   for (const localProfile of localSnapshot.profiles || []) {
     if (cloudProfileMap.has(localProfile.id)) {
-      // Same profile ID exists - MERGE progress, don't create duplicate
+      // Same profile ID exists - progress is merged, and the newest profile
+      // record wins so deletes/restores/renames propagate.
+      const idx = cloudProfileIndex.get(localProfile.id)
+      if (profileTimestamp(localProfile) > profileTimestamp(result.profiles[idx])) {
+        result.profiles[idx] = { ...localProfile }
+      }
       const localProg = localSnapshot.progress[localProfile.id]
       const cloudProg = result.progress[localProfile.id]
       if (localProg && cloudProg) {
@@ -289,6 +303,8 @@ export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
       }
     } else {
       // New profile not in cloud - add it
+      cloudProfileMap.set(localProfile.id, localProfile)
+      cloudProfileIndex.set(localProfile.id, result.profiles.length)
       result.profiles.push({ ...localProfile })
       if (localSnapshot.progress[localProfile.id]) {
         result.progress[localProfile.id] = localSnapshot.progress[localProfile.id]
@@ -347,10 +363,18 @@ export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
       currentId = cloudSnapshot.currentId
 
       const cloudProfileMap = new Map()
-      for (const p of profiles) cloudProfileMap.set(p.id, p)
+      const cloudProfileIndex = new Map()
+      profiles.forEach((p, i) => {
+        cloudProfileMap.set(p.id, p)
+        cloudProfileIndex.set(p.id, i)
+      })
 
       for (const localProfile of local.profiles) {
         if (cloudProfileMap.has(localProfile.id)) {
+          const idx = cloudProfileIndex.get(localProfile.id)
+          if (profileTimestamp(localProfile) > profileTimestamp(profiles[idx])) {
+            profiles[idx] = { ...localProfile }
+          }
           const localProg = local.progress[localProfile.id]
           const cloudProg = progress[localProfile.id]
           if (localProg && cloudProg) {
@@ -371,6 +395,12 @@ export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
     const keep = new Set(profiles.map((p) => p.id))
     for (const id of Object.keys(progress)) {
       if (!keep.has(id)) delete progress[id]
+    }
+
+    // Never leave the selection on a deleted profile.
+    const currentRecord = profiles.find((p) => p.id === currentId)
+    if (!currentId || !keep.has(currentId) || currentRecord?.deletedAt) {
+      currentId = profiles.find((p) => !p.deletedAt)?.id || profiles[0].id
     }
 
     localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles))
@@ -471,9 +501,13 @@ export async function smartSync({ push = true, force = false } = {}) {
   }
 
   const merged = mergeSnapshotsForUpload(localSnapshot, cloudSnapshot)
-  // Keep this device's current selection if it survived the merge.
-  if (localSnapshot.currentId && merged.profiles.some((p) => p.id === localSnapshot.currentId)) {
-    merged.currentId = localSnapshot.currentId
+  // Keep this device's current selection if it survived the merge (and is not
+  // a deleted profile).
+  const localCurrent = merged.profiles.find((p) => p.id === localSnapshot.currentId)
+  if (localCurrent && !localCurrent.deletedAt) {
+    merged.currentId = localCurrent.id
+  } else if (!merged.profiles.find((p) => p.id === merged.currentId && !p.deletedAt)) {
+    merged.currentId = merged.profiles.find((p) => !p.deletedAt)?.id || merged.profiles[0]?.id
   }
   await saveToPuter(merged)
   // Bring cloud-only profiles/progress back to this device as well.

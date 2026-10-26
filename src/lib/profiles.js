@@ -89,6 +89,13 @@ function isDeleted(profile) {
   return Boolean(profile?.deletedAt)
 }
 
+// Timestamp of the last change to a profile record. Used when merging so a
+// delete/restore/rename is not undone by an older copy from another device.
+export function profileTimestamp(profile) {
+  if (!profile) return 0
+  return profile.updatedAt || profile.deletedAt || profile.createdAt || 0
+}
+
 function activeOf(profiles) {
   return profiles.filter((p) => !isDeleted(p))
 }
@@ -210,11 +217,13 @@ export function initProfiles() {
   if (all.length === 0) {
     // First time with multi-profile: migrate legacy progress if exists
     const legacy = loadLegacyProgress()
+    const now = Date.now()
     const profile = {
       id: generateId(),
       name: '小朋友 1',
       avatar: AVATARS[0],
-      createdAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
     }
     all = [profile]
     saveProfiles(all)
@@ -226,11 +235,13 @@ export function initProfiles() {
 
   // Everything was deleted: make a fresh profile, deleted ones stay recoverable.
   if (activeOf(all).length === 0) {
+    const now = Date.now()
     const profile = {
       id: generateId(),
       name: '小朋友 1',
       avatar: AVATARS[0],
-      createdAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
     }
     all = [...all, profile]
     saveProfiles(all)
@@ -244,11 +255,13 @@ export function initProfiles() {
 export function createProfile(name, avatar) {
   const all = loadProfiles()
   const active = activeOf(all)
+  const now = Date.now()
   const profile = {
     id: generateId(),
     name: name.trim() || `小朋友 ${active.length + 1}`,
     avatar: avatar || AVATARS[active.length % AVATARS.length],
-    createdAt: Date.now(),
+    createdAt: now,
+    updatedAt: now,
   }
   const next = [...all, profile]
   saveProfiles(next)
@@ -273,7 +286,8 @@ export function switchProfile(id) {
 
 export function updateProfile(id, updates) {
   const all = loadProfiles()
-  const next = all.map((p) => (p.id === id ? { ...p, ...updates } : p))
+  const now = Date.now()
+  const next = all.map((p) => (p.id === id ? { ...p, ...updates, updatedAt: now } : p))
   saveProfiles(next)
   return { profiles: activeOf(next), deletedProfiles: deletedOf(next) }
 }
@@ -287,7 +301,7 @@ export function deleteProfile(id) {
   if (active.length <= 1) return null // can't delete the last remaining profile
 
   const now = Date.now()
-  const next = all.map((p) => (p.id === id ? { ...p, deletedAt: now } : p))
+  const next = all.map((p) => (p.id === id ? { ...p, deletedAt: now, updatedAt: now } : p))
   saveProfiles(next)
 
   const nextActive = activeOf(next)
@@ -311,11 +325,12 @@ export function restoreProfile(id) {
   const target = all.find((p) => p.id === id)
   if (!target || !isDeleted(target)) return null
 
+  const now = Date.now()
   const next = all.map((p) => {
     if (p.id !== id) return p
     const { deletedAt, ...rest } = p
     void deletedAt
-    return rest
+    return { ...rest, updatedAt: now }
   })
   saveProfiles(next)
   setCurrentId(id)
