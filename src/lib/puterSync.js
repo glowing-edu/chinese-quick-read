@@ -3,6 +3,13 @@
 // own Puter space.
 
 const PUTER_KEY = 'kinderchi-profiles-backup-v1'
+const HISTORY_KEY = 'kinderchi-profiles-history-v1'
+const SYNC_STATE_KEY = 'kinderchi-puter-sync-state'
+const MAX_HISTORY = 6
+
+const PROFILES_KEY = 'kinderchi-profiles-v2'
+const CURRENT_KEY = 'kinderchi-current-profile-v2'
+const PROGRESS_PREFIX = 'kinderchi-progress-v2-'
 
 export function isPuterAvailable() {
   return typeof window !== 'undefined' && typeof window.puter !== 'undefined'
@@ -41,25 +48,52 @@ export async function signOut() {
   }
 }
 
-export async function loadFromPuter() {
+async function readKey(key) {
   if (!isPuterAvailable()) return null
   try {
-    const data = await window.puter.kv.get(PUTER_KEY)
+    const data = await window.puter.kv.get(key)
     if (!data) return null
     if (typeof data === 'string') {
-      return JSON.parse(data)
+      try {
+        return JSON.parse(data)
+      } catch {
+        return data
+      }
     }
     return data
   } catch (err) {
-    console.error('Failed to load from Puter:', err)
+    console.error(`Failed to load ${key} from Puter:`, err)
     return null
   }
 }
 
-export async function saveToPuter(snapshot) {
+async function writeKey(key, value) {
   if (!isPuterAvailable()) throw new Error('Puter not available')
+  await window.puter.kv.set(key, value)
+  return true
+}
+
+export async function loadFromPuter() {
+  const data = await readKey(PUTER_KEY)
+  if (!data || typeof data !== 'object' || !Array.isArray(data.profiles)) return null
+  return data
+}
+
+// Never write an empty snapshot over the cloud data.
+export async function saveToPuter(snapshot, { backup = true } = {}) {
+  if (!isPuterAvailable()) throw new Error('Puter not available')
+  if (!snapshot || !Array.isArray(snapshot.profiles)) throw new Error('Invalid snapshot')
+
+  if (backup) {
+    // Keep the snapshot we're about to replace so it can be restored later.
+    const existing = await loadFromPuter()
+    if (existing && existing.updatedAt !== snapshot.updatedAt) {
+      await pushHistory(existing)
+    }
+  }
+
   try {
-    await window.puter.kv.set(PUTER_KEY, snapshot)
+    await writeKey(PUTER_KEY, snapshot)
     return true
   } catch (err) {
     console.error('Failed to save to Puter:', err)
@@ -67,17 +101,78 @@ export async function saveToPuter(snapshot) {
   }
 }
 
+async function loadCloudHistory() {
+  const data = await readKey(HISTORY_KEY)
+  return Array.isArray(data) ? data : []
+}
+
+async function pushHistory(snapshot) {
+  try {
+    const history = await loadCloudHistory()
+    const fp = getFingerprint(snapshot)
+    const without = history.filter((h) => h?.fingerprint !== fp)
+    const entry = { fingerprint: fp, savedAt: Date.now(), snapshot }
+    await writeKey(HISTORY_KEY, [entry, ...without].slice(0, MAX_HISTORY))
+  } catch (err) {
+    console.warn('Failed to store cloud backup:', err)
+  }
+}
+
+// Backups of previous cloud snapshots (newest first).
+export async function loadCloudBackups() {
+  const history = await loadCloudHistory()
+  return history.map((entry, index) => ({
+    index,
+    savedAt: entry.savedAt || entry.snapshot?.updatedAt || 0,
+    profiles: (entry.snapshot?.profiles || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      avatar: p.avatar,
+    })),
+    updatedAt: entry.snapshot?.updatedAt || 0,
+  }))
+}
+
+// Replace local (and cloud) with a previous cloud snapshot.
+export async function restoreCloudBackup(index) {
+  const history = await loadCloudHistory()
+  const snapshot = history[index]?.snapshot
+  if (!snapshot || !Array.isArray(snapshot.profiles)) return { ok: false, changed: false }
+  const result = applySnapshotToLocal(snapshot, false)
+  if (!result.ok) return result
+  try {
+    await saveToPuter(snapshot, { backup: true })
+  } catch (err) {
+    console.error('Failed to restore backup to cloud:', err)
+  }
+  saveSyncState({
+    lastCloudUpdatedAt: snapshot.updatedAt,
+    lastLocalFingerprint: getFingerprint(createSnapshot()),
+  })
+  return result
+}
+
+// Summary of what's currently in the cloud, for the sync panel.
+export async function getCloudSummary() {
+  const snapshot = await loadFromPuter()
+  if (!snapshot) return null
+  return {
+    updatedAt: snapshot.updatedAt || 0,
+    profiles: snapshot.profiles.map((p) => ({
+      id: p.id,
+      name: p.name,
+      avatar: p.avatar,
+    })),
+  }
+}
+
 // Create a snapshot from current localStorage state
 export function createSnapshot() {
-  const PROFILES_KEY = 'kinderchi-profiles-v2'
-  const CURRENT_KEY = 'kinderchi-current-profile-v2'
-  const PROGRESS_PREFIX = 'kinderchi-progress-v2-'
-  
   try {
     const profilesRaw = localStorage.getItem(PROFILES_KEY)
     const profiles = profilesRaw ? JSON.parse(profilesRaw) : []
     const currentId = localStorage.getItem(CURRENT_KEY)
-    
+
     const progress = {}
     for (const p of profiles) {
       const raw = localStorage.getItem(PROGRESS_PREFIX + p.id)
@@ -85,7 +180,7 @@ export function createSnapshot() {
         progress[p.id] = JSON.parse(raw)
       }
     }
-    
+
     return {
       schema: 1,
       app: 'kinderchi',
@@ -120,17 +215,20 @@ function countStars(results) {
 // Merge progress for the same profile ID - combine progress from both devices
 function mergeProgress(localProg = {}, cloudProg = {}) {
   const result = {}
-  
+
   result.heard = unionArrays(localProg.heard, cloudProg.heard)
   result.wordsRead = unionArrays(localProg.wordsRead, cloudProg.wordsRead)
   result.sentencesRead = unionArrays(localProg.sentencesRead, cloudProg.sentencesRead)
-  
+
   result.quizzesPlayed = Math.max(localProg.quizzesPlayed || 0, cloudProg.quizzesPlayed || 0)
-  
+
   const localBest = localProg.quizBest
   const cloudBest = cloudProg.quizBest
   if (localBest && cloudBest) {
-    if (localBest.correct > cloudBest.correct || (localBest.correct === cloudBest.correct && localBest.total >= cloudBest.total)) {
+    if (
+      localBest.correct > cloudBest.correct ||
+      (localBest.correct === cloudBest.correct && localBest.total >= cloudBest.total)
+    ) {
       result.quizBest = localBest
     } else {
       result.quizBest = cloudBest
@@ -138,7 +236,7 @@ function mergeProgress(localProg = {}, cloudProg = {}) {
   } else {
     result.quizBest = localBest || cloudBest || null
   }
-  
+
   const allChars = new Set([
     ...Object.keys(localProg.charResults || {}),
     ...Object.keys(cloudProg.charResults || {}),
@@ -155,15 +253,16 @@ function mergeProgress(localProg = {}, cloudProg = {}) {
       result.charResults[char] = countStars(cloudRes) > countStars(localRes) ? cloudRes : localRes
     }
   }
-  
+
   return result
 }
 
-// Upload local progress to cloud - merge if same profile ID exists
+// Merge local into cloud. The cloud is always the base, so no cloud profile
+// can ever be dropped by an upload.
 export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
   if (!cloudSnapshot) return localSnapshot
   if (!localSnapshot) return cloudSnapshot
-  
+
   const result = {
     schema: 1,
     app: 'kinderchi',
@@ -172,12 +271,12 @@ export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
     progress: JSON.parse(JSON.stringify(cloudSnapshot.progress || {})),
     currentId: cloudSnapshot.currentId,
   }
-  
+
   const cloudProfileMap = new Map()
   for (const p of result.profiles) {
     cloudProfileMap.set(p.id, p)
   }
-  
+
   for (const localProfile of localSnapshot.profiles || []) {
     if (cloudProfileMap.has(localProfile.id)) {
       // Same profile ID exists - MERGE progress, don't create duplicate
@@ -196,97 +295,106 @@ export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
       }
     }
   }
-  
+
   return result
 }
 
-// Download from cloud to local - merge if same profile ID exists
-export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
-  if (!cloudSnapshot) return false
-  
-  try {
-    const PROFILES_KEY = 'kinderchi-profiles-v2'
-    const CURRENT_KEY = 'kinderchi-current-profile-v2'
-    const PROGRESS_PREFIX = 'kinderchi-progress-v2-'
-    
-    const localProfilesRaw = localStorage.getItem(PROFILES_KEY)
-    const localProfiles = localProfilesRaw ? JSON.parse(localProfilesRaw) : []
-    const localProgress = {}
-    for (const p of localProfiles) {
-      const raw = localStorage.getItem(PROGRESS_PREFIX + p.id)
-      if (raw) localProgress[p.id] = JSON.parse(raw)
-    }
-    
-    if (!preserveLocalAsNew || localProfiles.length === 0) {
-      localStorage.setItem(PROFILES_KEY, JSON.stringify(cloudSnapshot.profiles || []))
-      if (cloudSnapshot.currentId) {
-        localStorage.setItem(CURRENT_KEY, cloudSnapshot.currentId)
-      }
-      for (const p of cloudSnapshot.profiles || []) {
-        if (cloudSnapshot.progress[p.id]) {
-          localStorage.setItem(PROGRESS_PREFIX + p.id, JSON.stringify(cloudSnapshot.progress[p.id]))
-        }
-      }
-      return true
-    }
-    
-    const result = {
-      profiles: [...(cloudSnapshot.profiles || [])],
-      progress: JSON.parse(JSON.stringify(cloudSnapshot.progress || {})),
-      currentId: cloudSnapshot.currentId,
-    }
-    
-    const cloudProfileMap = new Map()
-    for (const p of result.profiles) {
-      cloudProfileMap.set(p.id, p)
-    }
-    
-    for (const localProfile of localProfiles) {
-      if (cloudProfileMap.has(localProfile.id)) {
-        // Same profile ID exists - MERGE progress
-        const localProg = localProgress[localProfile.id]
-        const cloudProg = result.progress[localProfile.id]
-        if (localProg && cloudProg) {
-          result.progress[localProfile.id] = mergeProgress(localProg, cloudProg)
-        } else if (localProg && !cloudProg) {
-          result.progress[localProfile.id] = localProg
-        }
-      } else {
-        // New profile not in cloud - add it as new
-        result.profiles.push(localProfile)
-        if (localProgress[localProfile.id]) {
-          result.progress[localProfile.id] = localProgress[localProfile.id]
-        }
-      }
-    }
-    
-    localStorage.setItem(PROFILES_KEY, JSON.stringify(result.profiles))
-    if (result.currentId && result.profiles.find(p => p.id === result.currentId)) {
-      localStorage.setItem(CURRENT_KEY, result.currentId)
-    } else if (result.profiles.length > 0) {
-      localStorage.setItem(CURRENT_KEY, result.profiles[0].id)
-    }
-    for (const id of Object.keys(result.progress)) {
-      localStorage.setItem(PROGRESS_PREFIX + id, JSON.stringify(result.progress[id]))
-    }
-    
-    return true
-  } catch (err) {
-    console.error('Failed to apply snapshot:', err)
-    return false
-  }
-}
-
-const SYNC_STATE_KEY = 'kinderchi-puter-sync-state'
-
-// Get fingerprint of local data
-function getLocalFingerprint(snapshot) {
+function getFingerprint(snapshot) {
   if (!snapshot) return null
   try {
     // Only care about profiles and progress, not timestamps
     return JSON.stringify([snapshot.profiles, snapshot.progress])
   } catch {
     return null
+  }
+}
+
+function readLocal() {
+  const rawProfiles = localStorage.getItem(PROFILES_KEY)
+  const profiles = rawProfiles ? JSON.parse(rawProfiles) : []
+  const progress = {}
+  for (const p of profiles) {
+    const raw = localStorage.getItem(PROGRESS_PREFIX + p.id)
+    if (raw) progress[p.id] = JSON.parse(raw)
+  }
+  return { profiles, progress }
+}
+
+// Write a snapshot into localStorage.
+//   preserveLocalAsNew = true  -> merge: cloud is the base, local-only profiles
+//                                 and progress are kept too.
+//   preserveLocalAsNew = false -> replace: local becomes exactly the snapshot.
+export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
+  if (!cloudSnapshot || !Array.isArray(cloudSnapshot.profiles) || cloudSnapshot.profiles.length === 0) {
+    return { ok: false, changed: false }
+  }
+
+  try {
+    const before = getFingerprint(createSnapshot())
+    const local = readLocal()
+
+    let profiles
+    let progress
+    let currentId
+
+    if (!preserveLocalAsNew || local.profiles.length === 0) {
+      profiles = cloudSnapshot.profiles.map((p) => ({ ...p }))
+      progress = JSON.parse(JSON.stringify(cloudSnapshot.progress || {}))
+      currentId = cloudSnapshot.currentId
+    } else {
+      profiles = cloudSnapshot.profiles.map((p) => ({ ...p }))
+      progress = JSON.parse(JSON.stringify(cloudSnapshot.progress || {}))
+      currentId = cloudSnapshot.currentId
+
+      const cloudProfileMap = new Map()
+      for (const p of profiles) cloudProfileMap.set(p.id, p)
+
+      for (const localProfile of local.profiles) {
+        if (cloudProfileMap.has(localProfile.id)) {
+          const localProg = local.progress[localProfile.id]
+          const cloudProg = progress[localProfile.id]
+          if (localProg && cloudProg) {
+            progress[localProfile.id] = mergeProgress(localProg, cloudProg)
+          } else if (localProg && !cloudProg) {
+            progress[localProfile.id] = localProg
+          }
+        } else {
+          profiles.push(localProfile)
+          if (local.progress[localProfile.id]) {
+            progress[localProfile.id] = local.progress[localProfile.id]
+          }
+        }
+      }
+    }
+
+    // Drop progress belonging to profiles that are no longer around.
+    const keep = new Set(profiles.map((p) => p.id))
+    for (const id of Object.keys(progress)) {
+      if (!keep.has(id)) delete progress[id]
+    }
+
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles))
+    if (currentId && keep.has(currentId)) {
+      localStorage.setItem(CURRENT_KEY, currentId)
+    } else {
+      localStorage.setItem(CURRENT_KEY, profiles[0].id)
+    }
+    for (const p of profiles) {
+      const prog = progress[p.id]
+      if (prog) localStorage.setItem(PROGRESS_PREFIX + p.id, JSON.stringify(prog))
+    }
+    // Remove stale per-profile progress keys.
+    for (const localProfile of local.profiles) {
+      if (!keep.has(localProfile.id)) {
+        localStorage.removeItem(PROGRESS_PREFIX + localProfile.id)
+      }
+    }
+
+    const after = getFingerprint(createSnapshot())
+    return { ok: true, changed: before !== after }
+  } catch (err) {
+    console.error('Failed to apply snapshot:', err)
+    return { ok: false, changed: false }
   }
 }
 
@@ -309,67 +417,70 @@ function saveSyncState(state) {
   }
 }
 
-// Smart sync: check timestamps/fingerprints to avoid unnecessary downloads
-export async function smartSync() {
+// Sync with the cloud.
+//
+//   push: false  -> pull only. Cloud is merged into this device; the cloud is
+//                   never written. Used for automatic sync on load.
+//   push: true   -> two-way: merge local into the cloud, then bring the merged
+//                   result back down locally. Cloud profiles are never dropped.
+//   force: true  -> ignore the timestamp shortcut and sync anyway.
+export async function smartSync({ push = true, force = false } = {}) {
   if (!isPuterAvailable()) throw new Error('Puter not available')
-  const signedIn = await isSignedIn()
-  if (!signedIn) throw new Error('Not signed in')
-  
+  if (!(await isSignedIn())) throw new Error('Not signed in')
+
   const localSnapshot = createSnapshot()
   if (!localSnapshot) throw new Error('Failed to create local snapshot')
-  
-  const localFingerprint = getLocalFingerprint(localSnapshot)
+
+  const localFingerprint = getFingerprint(localSnapshot)
   const syncState = getSyncState()
-  
-  // Download cloud to check
+
   const cloudSnapshot = await loadFromPuter()
-  
+
   if (!cloudSnapshot) {
-    // No cloud data, just upload
-    await saveToPuter(localSnapshot)
+    if (!push) return { action: 'none', changed: false }
+    // Nothing in the cloud yet - this device seeds it.
+    await saveToPuter(localSnapshot, { backup: false })
     saveSyncState({
       lastCloudUpdatedAt: localSnapshot.updatedAt,
       lastLocalFingerprint: localFingerprint,
     })
-    return { action: 'uploaded', changed: true }
+    return { action: 'uploaded', changed: false }
   }
-  
-  const cloudUpdatedAt = cloudSnapshot.updatedAt
-  const cloudFingerprint = getLocalFingerprint(cloudSnapshot)
-  
-  // Check if anything changed
-  if (cloudUpdatedAt === syncState.lastCloudUpdatedAt && localFingerprint === syncState.lastLocalFingerprint) {
-    // Nothing changed anywhere
-    return { action: 'none', changed: false }
-  }
-  
-  if (cloudUpdatedAt === syncState.lastCloudUpdatedAt && localFingerprint !== syncState.lastLocalFingerprint) {
-    // Only local changed, cloud unchanged - can upload directly without merge
-    await saveToPuter(localSnapshot)
-    saveSyncState({
-      lastCloudUpdatedAt: localSnapshot.updatedAt,
-      lastLocalFingerprint: localFingerprint,
-    })
-    return { action: 'uploaded_local_only', changed: true }
-  }
-  
-  if (cloudUpdatedAt !== syncState.lastCloudUpdatedAt && localFingerprint === syncState.lastLocalFingerprint) {
-    // Only cloud changed, local unchanged - just download
-    const ok = applySnapshotToLocal(cloudSnapshot, true)
+
+  const cloudUpdatedAt = cloudSnapshot.updatedAt || 0
+
+  if (!push) {
+    // Automatic, non-destructive sync: download if the cloud changed.
+    if (!force && cloudUpdatedAt === syncState.lastCloudUpdatedAt) {
+      return { action: 'none', changed: false }
+    }
+    const result = applySnapshotToLocal(cloudSnapshot, true)
     saveSyncState({
       lastCloudUpdatedAt: cloudUpdatedAt,
-      lastLocalFingerprint: getLocalFingerprint(createSnapshot()),
+      lastLocalFingerprint: getFingerprint(createSnapshot()),
     })
-    if (ok) window.location.reload()
-    return { action: 'downloaded_cloud_only', changed: true }
+    return { action: result.ok ? 'downloaded' : 'error', changed: result.changed }
   }
-  
-  // Both changed - need full merge
+
+  if (
+    !force &&
+    cloudUpdatedAt === syncState.lastCloudUpdatedAt &&
+    localFingerprint === syncState.lastLocalFingerprint
+  ) {
+    return { action: 'none', changed: false }
+  }
+
   const merged = mergeSnapshotsForUpload(localSnapshot, cloudSnapshot)
+  // Keep this device's current selection if it survived the merge.
+  if (localSnapshot.currentId && merged.profiles.some((p) => p.id === localSnapshot.currentId)) {
+    merged.currentId = localSnapshot.currentId
+  }
   await saveToPuter(merged)
+  // Bring cloud-only profiles/progress back to this device as well.
+  const result = applySnapshotToLocal(merged, false)
   saveSyncState({
     lastCloudUpdatedAt: merged.updatedAt,
-    lastLocalFingerprint: getLocalFingerprint(merged),
+    lastLocalFingerprint: getFingerprint(createSnapshot()),
   })
-  return { action: 'merged', changed: true }
+  return { action: 'merged', changed: result.changed }
 }

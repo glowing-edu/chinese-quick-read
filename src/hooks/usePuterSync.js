@@ -5,12 +5,11 @@ import {
   getUser,
   signIn,
   signOut,
-  loadFromPuter,
-  applySnapshotToLocal,
   smartSync,
 } from '../lib/puterSync.js'
 
 const UP_TO_DATE = '已是最新狀態 Up to date'
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function usePuterSync() {
   const [available] = useState(() => isPuterAvailable())
@@ -22,33 +21,46 @@ export function usePuterSync() {
   // Only run the automatic sync once per page load (also guards StrictMode).
   const autoSyncStarted = useRef(false)
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const signed = await isSignedIn()
-      setSignedIn(signed)
-      if (signed) {
-        const u = await getUser()
-        setUser(u)
-        return true
+  // Puter's SDK can need a moment after load before isSignedIn() is accurate,
+  // so retry a few times instead of trusting the first (false) answer.
+  const checkAuth = useCallback(async ({ retries = 0 } = {}) => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const signed = await isSignedIn()
+        if (signed) {
+          setSignedIn(true)
+          const u = await getUser()
+          setUser(u)
+          return true
+        }
+        if (attempt === retries) {
+          setSignedIn(false)
+          setUser(null)
+          return false
+        }
+      } catch (err) {
+        console.error(err)
       }
-      setUser(null)
-      return false
-    } catch (err) {
-      console.error(err)
-      return false
+      await sleep(600)
     }
+    return false
   }, [])
 
   // silent = background sync: no "up to date" banner, errors only logged.
   const handleSync = useCallback(
-    async ({ silent = false } = {}) => {
+    async ({ silent = false, push = true, force = false } = {}) => {
       if (!available) return null
       if (!(await isSignedIn())) return null
       setSyncing(true)
       if (!silent) setError(null)
       try {
-        const result = await smartSync()
+        const result = await smartSync({ push, force })
         setLastSync(Date.now())
+        if (result.changed) {
+          // Data changed on disk - reload so the UI shows the merged result.
+          window.location.reload()
+          return result
+        }
         if (!silent && result.action === 'none') {
           setError(UP_TO_DATE)
           setTimeout(() => setError((e) => (e === UP_TO_DATE ? null : e)), 2000)
@@ -66,15 +78,16 @@ export function usePuterSync() {
   )
 
   // On load: check auth, then auto-sync if already signed in (e.g. after refresh).
+  // Pull-only, so a refresh can never overwrite the cloud.
   useEffect(() => {
     if (!available) return undefined
     let cancelled = false
     ;(async () => {
-      const signed = await checkAuth()
+      const signed = await checkAuth({ retries: 4 })
       if (!signed || cancelled) return
       if (autoSyncStarted.current) return
       autoSyncStarted.current = true
-      await handleSync({ silent: true })
+      await handleSync({ silent: true, push: false })
     })()
     return () => {
       cancelled = true
@@ -88,9 +101,9 @@ export function usePuterSync() {
       await signIn()
       const signed = await checkAuth()
       if (!signed) return
-      // First sync right after signing in.
       autoSyncStarted.current = true
-      await handleSync({ silent: false })
+      // First sync right after signing in (merge both ways).
+      await handleSync({ silent: false, push: true, force: true })
     } catch (err) {
       setError(err.message)
     }
@@ -107,34 +120,17 @@ export function usePuterSync() {
     }
   }, [])
 
-  const handleLoadFromCloud = useCallback(async () => {
-    if (!available || !signedIn) return
-    setSyncing(true)
-    setError(null)
-    try {
-      const cloudSnapshot = await loadFromPuter()
-      if (!cloudSnapshot) {
-        setError('No data in cloud')
-        return
-      }
-      // Apply to local, preserving local as new profiles
-      const ok = applySnapshotToLocal(cloudSnapshot, true)
-      if (ok) {
-        setLastSync(Date.now())
-        // Reload the page to refresh state
-        window.location.reload()
-      } else {
-        setError('Failed to apply data')
-      }
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setSyncing(false)
-    }
-  }, [available, signedIn])
+  // Button handler: push local progress (merged into whatever is in the cloud).
+  const handleSyncNow = useCallback(
+    () => handleSync({ silent: false, push: true, force: true }),
+    [handleSync],
+  )
 
-  // Button handler: always a user-initiated (non-silent) sync.
-  const handleManualSync = useCallback(() => handleSync({ silent: false }), [handleSync])
+  // Button handler: pull the cloud down and merge it into this device.
+  const handleLoadFromCloud = useCallback(
+    () => handleSync({ silent: false, push: false, force: true }),
+    [handleSync],
+  )
 
   return {
     available,
@@ -145,7 +141,7 @@ export function usePuterSync() {
     error,
     signIn: handleSignIn,
     signOut: handleSignOut,
-    sync: handleManualSync,
+    sync: handleSyncNow,
     loadFromCloud: handleLoadFromCloud,
   }
 }
