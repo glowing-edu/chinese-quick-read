@@ -6,6 +6,10 @@ const CURRENT_KEY = 'kinderchi-current-profile-v2'
 const LEGACY_KEY = 'kinderchi-progress-v1'
 const PROGRESS_PREFIX = 'kinderchi-progress-v2-'
 
+// Deleted profiles stay recoverable for this many days.
+export const DELETED_RETENTION_DAYS = 30
+const DELETED_RETENTION_MS = DELETED_RETENTION_DAYS * 24 * 60 * 60 * 1000
+
 const DEFAULT_PROGRESS = {
   heard: [], // characters learned
   wordsRead: [], // words read
@@ -73,9 +77,60 @@ function loadProfiles() {
     const raw = window.localStorage.getItem(PROFILES_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    if (!Array.isArray(parsed)) return []
+    return purgeExpiredProfiles(parsed)
   } catch {
     return []
+  }
+}
+
+// Soft-deleted profiles are kept for a month so they can be recovered.
+function isDeleted(profile) {
+  return Boolean(profile?.deletedAt)
+}
+
+function activeOf(profiles) {
+  return profiles.filter((p) => !isDeleted(p))
+}
+
+function deletedOf(profiles) {
+  return profiles.filter((p) => isDeleted(p))
+}
+
+// Drop profiles that were deleted more than DELETED_RETENTION_DAYS ago.
+function purgeExpiredProfiles(profiles) {
+  const now = Date.now()
+  let changed = false
+  const kept = []
+  for (const p of profiles) {
+    if (isDeleted(p) && now - p.deletedAt > DELETED_RETENTION_MS) {
+      changed = true
+      try {
+        window.localStorage.removeItem(PROGRESS_PREFIX + p.id)
+      } catch {
+        // ignore
+      }
+    } else {
+      kept.push(p)
+    }
+  }
+  if (changed) saveProfiles(kept)
+  return kept
+}
+
+function stateFromProfiles(all) {
+  const profiles = activeOf(all)
+  const deletedProfiles = deletedOf(all)
+  let currentId = getCurrentId()
+  if (!currentId || !profiles.find((p) => p.id === currentId)) {
+    currentId = profiles[0]?.id ?? null
+    if (currentId) setCurrentId(currentId)
+  }
+  return {
+    profiles,
+    deletedProfiles,
+    currentId,
+    progress: currentId ? loadProgressForProfile(currentId) : freshProgress(),
   }
 }
 
@@ -150,85 +205,127 @@ function setCurrentId(id) {
 }
 
 export function initProfiles() {
-  let profiles = loadProfiles()
-  if (profiles.length > 0) {
-    let currentId = getCurrentId()
-    if (!currentId || !profiles.find((p) => p.id === currentId)) {
-      currentId = profiles[0].id
-      setCurrentId(currentId)
+  let all = loadProfiles()
+
+  if (all.length === 0) {
+    // First time with multi-profile: migrate legacy progress if exists
+    const legacy = loadLegacyProgress()
+    const profile = {
+      id: generateId(),
+      name: '小朋友 1',
+      avatar: AVATARS[0],
+      createdAt: Date.now(),
     }
-    return {
-      profiles,
-      currentId,
-      progress: loadProgressForProfile(currentId),
-    }
+    all = [profile]
+    saveProfiles(all)
+    setCurrentId(profile.id)
+    const progress = legacy ?? freshProgress()
+    saveProgressForProfile(profile.id, progress)
+    return { profiles: all, deletedProfiles: [], currentId: profile.id, progress }
   }
 
-  // First time with multi-profile: migrate legacy progress if exists
-  const legacy = loadLegacyProgress()
-  const profile = {
-    id: generateId(),
-    name: '小朋友 1',
-    avatar: AVATARS[0],
-    createdAt: Date.now(),
+  // Everything was deleted: make a fresh profile, deleted ones stay recoverable.
+  if (activeOf(all).length === 0) {
+    const profile = {
+      id: generateId(),
+      name: '小朋友 1',
+      avatar: AVATARS[0],
+      createdAt: Date.now(),
+    }
+    all = [...all, profile]
+    saveProfiles(all)
+    setCurrentId(profile.id)
+    saveProgressForProfile(profile.id, freshProgress())
   }
-  profiles = [profile]
-  saveProfiles(profiles)
-  setCurrentId(profile.id)
-  const progress = legacy ?? freshProgress()
-  saveProgressForProfile(profile.id, progress)
-  // Optionally keep legacy for safety, but we've migrated
-  return { profiles, currentId: profile.id, progress }
+
+  return stateFromProfiles(all)
 }
 
 export function createProfile(name, avatar) {
-  const profiles = loadProfiles()
+  const all = loadProfiles()
+  const active = activeOf(all)
   const profile = {
     id: generateId(),
-    name: name.trim() || `小朋友 ${profiles.length + 1}`,
-    avatar: avatar || AVATARS[profiles.length % AVATARS.length],
+    name: name.trim() || `小朋友 ${active.length + 1}`,
+    avatar: avatar || AVATARS[active.length % AVATARS.length],
     createdAt: Date.now(),
   }
-  const next = [...profiles, profile]
+  const next = [...all, profile]
   saveProfiles(next)
   const progress = freshProgress()
   saveProgressForProfile(profile.id, progress)
   setCurrentId(profile.id)
-  return { profiles: next, currentId: profile.id, progress }
+  return { profiles: activeOf(next), deletedProfiles: deletedOf(next), currentId: profile.id, progress }
 }
 
 export function switchProfile(id) {
-  const profiles = loadProfiles()
-  if (!profiles.find((p) => p.id === id)) return null
+  const all = loadProfiles()
+  const active = activeOf(all)
+  if (!active.find((p) => p.id === id)) return null
   setCurrentId(id)
   return {
-    profiles,
+    profiles: active,
+    deletedProfiles: deletedOf(all),
     currentId: id,
     progress: loadProgressForProfile(id),
   }
 }
 
 export function updateProfile(id, updates) {
-  const profiles = loadProfiles()
-  const next = profiles.map((p) => (p.id === id ? { ...p, ...updates } : p))
+  const all = loadProfiles()
+  const next = all.map((p) => (p.id === id ? { ...p, ...updates } : p))
   saveProfiles(next)
-  return next
+  return { profiles: activeOf(next), deletedProfiles: deletedOf(next) }
 }
 
+// Soft delete: keep the profile (and its progress) for recovery.
 export function deleteProfile(id) {
-  const profiles = loadProfiles()
-  if (profiles.length <= 1) return profiles // can't delete last profile
-  const next = profiles.filter((p) => p.id !== id)
+  const all = loadProfiles()
+  const active = activeOf(all)
+  const target = all.find((p) => p.id === id)
+  if (!target || isDeleted(target)) return null
+  if (active.length <= 1) return null // can't delete the last remaining profile
+
+  const now = Date.now()
+  const next = all.map((p) => (p.id === id ? { ...p, deletedAt: now } : p))
   saveProfiles(next)
-  try {
-    window.localStorage.removeItem(PROGRESS_PREFIX + id)
-  } catch {
-    // ignore
+
+  const nextActive = activeOf(next)
+  let currentId = getCurrentId()
+  if (!currentId || currentId === id || !nextActive.find((p) => p.id === currentId)) {
+    currentId = nextActive[0].id
+    setCurrentId(currentId)
   }
-  if (getCurrentId() === id) {
-    setCurrentId(next[0].id)
+
+  return {
+    profiles: nextActive,
+    deletedProfiles: deletedOf(next),
+    currentId,
+    progress: loadProgressForProfile(currentId),
   }
-  return next
+}
+
+// Bring back a soft-deleted profile and switch to it.
+export function restoreProfile(id) {
+  const all = loadProfiles()
+  const target = all.find((p) => p.id === id)
+  if (!target || !isDeleted(target)) return null
+
+  const next = all.map((p) => {
+    if (p.id !== id) return p
+    const { deletedAt, ...rest } = p
+    void deletedAt
+    return rest
+  })
+  saveProfiles(next)
+  setCurrentId(id)
+
+  return {
+    profiles: activeOf(next),
+    deletedProfiles: deletedOf(next),
+    currentId: id,
+    progress: loadProgressForProfile(id),
+  }
 }
 
 export function loadProgress(id) {

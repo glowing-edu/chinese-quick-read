@@ -257,6 +257,39 @@ button {
   gap: 10px;
 }
 
+.profile__hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.profile__deleted-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile__item--deleted {
+  border: 2px dashed var(--line);
+  border-radius: 14px;
+  background: #fbf9f5;
+}
+
+.profile__deleted-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.profile__deleted-meta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
 .btn--small {
   min-height: 44px;
   font-size: 16px;

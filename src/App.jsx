@@ -29,6 +29,7 @@ export default function App() {
   })
   const {
     profiles,
+    deletedProfiles,
     currentProfile,
     progress,
     markHeard,
@@ -41,12 +42,19 @@ export default function App() {
     addProfile,
     renameProfile,
     removeProfile,
+    restoreProfile,
   } = useProgress()
 
   const switchProfile = (id) => {
     stopSpeaking()
     setTab('learn')
     switchProfileBase(id)
+  }
+
+  const handleRestoreProfile = (id) => {
+    stopSpeaking()
+    setTab('learn')
+    restoreProfile(id)
   }
 
   const lesson = LESSONS.find((l) => l.id === lessonId) ?? LESSONS[0]
@@ -149,11 +157,13 @@ export default function App() {
           <PuterSync />
           <ProfileSwitcher
             profiles={profiles}
+            deletedProfiles={deletedProfiles}
             currentProfile={currentProfile}
             onSwitch={switchProfile}
             onAdd={addProfile}
             onRename={renameProfile}
             onDelete={removeProfile}
+            onRestore={handleRestoreProfile}
           />
           <span className="badge-stars" title="星星 Stars earned">
             ⭐ {earnedStars} / {maxStars}

@@ -1,14 +1,15 @@
 import { useCallback, useState } from 'react'
 import {
   STAR_RESULTS,
+  DELETED_RETENTION_DAYS,
   freshProgress,
   initProfiles,
   createProfile as createProfileApi,
   switchProfile as switchProfileApi,
   updateProfile,
   deleteProfile as deleteProfileApi,
+  restoreProfile as restoreProfileApi,
   saveProgress,
-  loadProgress,
 } from './profiles.js'
 
 export function useProgress() {
@@ -16,7 +17,7 @@ export function useProgress() {
   // progress are always updated together, so one profile can never overwrite
   // another one's progress.
   const [state, setState] = useState(() => initProfiles())
-  const { profiles, currentId, progress } = state
+  const { profiles, deletedProfiles, currentId, progress } = state
 
   // Apply a change to the current profile's progress and persist it
   // immediately under that profile's own key.
@@ -91,6 +92,7 @@ export function useProgress() {
     setState((s) => ({
       ...s,
       profiles: res.profiles,
+      deletedProfiles: res.deletedProfiles,
       currentId: res.currentId,
       progress: res.progress,
     }))
@@ -102,6 +104,7 @@ export function useProgress() {
     setState((s) => ({
       ...s,
       profiles: res.profiles,
+      deletedProfiles: res.deletedProfiles,
       currentId: res.currentId,
       progress: res.progress,
     }))
@@ -109,28 +112,42 @@ export function useProgress() {
 
   const renameProfile = useCallback((id, name, avatar) => {
     const updates = avatar ? { name, avatar } : { name }
-    const next = updateProfile(id, updates)
-    setState((s) => ({ ...s, profiles: next }))
+    const res = updateProfile(id, updates)
+    if (!res) return
+    setState((s) => ({
+      ...s,
+      profiles: res.profiles,
+      deletedProfiles: res.deletedProfiles,
+    }))
   }, [])
 
   const removeProfile = useCallback((id) => {
-    const next = deleteProfileApi(id)
-    setState((s) => {
-      if (next.length === s.profiles.length) return s // cannot delete the last profile
-      const targetId = s.currentId === id ? next[0].id : s.currentId
-      const res = switchProfileApi(targetId)
-      const target = res?.currentId || targetId
-      return {
-        ...s,
-        profiles: next,
-        currentId: target,
-        progress: res ? res.progress : loadProgress(target),
-      }
-    })
+    const res = deleteProfileApi(id)
+    if (!res) return
+    setState((s) => ({
+      ...s,
+      profiles: res.profiles,
+      deletedProfiles: res.deletedProfiles,
+      currentId: res.currentId,
+      progress: res.progress,
+    }))
+  }, [])
+
+  const restoreProfile = useCallback((id) => {
+    const res = restoreProfileApi(id)
+    if (!res) return
+    setState((s) => ({
+      ...s,
+      profiles: res.profiles,
+      deletedProfiles: res.deletedProfiles,
+      currentId: res.currentId,
+      progress: res.progress,
+    }))
   }, [])
 
   return {
     profiles,
+    deletedProfiles,
     currentProfile: profiles.find((p) => p.id === currentId) || profiles[0],
     currentId,
     progress,
@@ -144,7 +161,16 @@ export function useProgress() {
     addProfile,
     renameProfile,
     removeProfile,
+    restoreProfile,
   }
 }
 
-export { AVATARS, STAR_RESULTS, starsForChar, starsForLesson, resultsForChar, totalStars } from './profiles.js'
+export {
+  AVATARS,
+  STAR_RESULTS,
+  DELETED_RETENTION_DAYS,
+  starsForChar,
+  starsForLesson,
+  resultsForChar,
+  totalStars,
+} from './profiles.js'

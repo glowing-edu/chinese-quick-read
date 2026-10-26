@@ -1,9 +1,26 @@
 import { useState } from 'react'
-import { AVATARS } from '../lib/progress'
+import { AVATARS, DELETED_RETENTION_DAYS } from '../lib/progress'
 
-export default function ProfileSwitcher({ profiles, currentProfile, onSwitch, onAdd, onRename, onDelete }) {
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function daysLeft(deletedAt) {
+  if (!deletedAt) return DELETED_RETENTION_DAYS
+  const elapsed = Math.floor((Date.now() - deletedAt) / DAY_MS)
+  return Math.max(1, DELETED_RETENTION_DAYS - elapsed)
+}
+
+export default function ProfileSwitcher({
+  profiles,
+  deletedProfiles = [],
+  currentProfile,
+  onSwitch,
+  onAdd,
+  onRename,
+  onDelete,
+  onRestore,
+}) {
   const [open, setOpen] = useState(false)
-  const [mode, setMode] = useState('list') // list | add | rename
+  const [mode, setMode] = useState('list') // list | add | rename | restore
   const [name, setName] = useState('')
   const [avatar, setAvatar] = useState(AVATARS[0])
   const [renamingId, setRenamingId] = useState(null)
@@ -36,6 +53,14 @@ export default function ProfileSwitcher({ profiles, currentProfile, onSwitch, on
   const handleRename = () => {
     if (!name.trim() || !renamingId) return
     onRename(renamingId, name, avatar)
+    close()
+  }
+
+  const handleRestore = (profile) => {
+    if (!window.confirm(`還原「${profile.name}」同佢嘅進度？\nRestore ${profile.name} and their progress?`)) {
+      return
+    }
+    onRestore(profile.id)
     close()
   }
 
@@ -91,13 +116,26 @@ export default function ProfileSwitcher({ profiles, currentProfile, onSwitch, on
                     type="button"
                     className="profile__action profile__action--danger"
                     onClick={() => {
-                      if (window.confirm(`刪除「${currentProfile.name}」的進度？Delete ${currentProfile.name}'s progress?`)) {
+                      if (
+                        window.confirm(
+                          `刪除「${currentProfile.name}」？進度會保留 ${DELETED_RETENTION_DAYS} 日，可以還原。\nDelete ${currentProfile.name}? Progress is kept for ${DELETED_RETENTION_DAYS} days and can be restored.`,
+                        )
+                      ) {
                         onDelete(currentProfile.id)
                         close()
                       }
                     }}
                   >
                     🗑️ 刪除 Delete
+                  </button>
+                )}
+                {deletedProfiles.length > 0 && (
+                  <button
+                    type="button"
+                    className="profile__action"
+                    onClick={() => setMode('restore')}
+                  >
+                    ♻️ 還原小朋友 Restore ({deletedProfiles.length})
                   </button>
                 )}
               </div>
@@ -171,6 +209,45 @@ export default function ProfileSwitcher({ profiles, currentProfile, onSwitch, on
                 </button>
                 <button type="button" className="btn btn--primary btn--small" onClick={handleRename}>
                   儲存 Save
+                </button>
+              </div>
+            </div>
+          )}
+
+          {mode === 'restore' && (
+            <div className="profile__form">
+              <h3 className="profile__title">還原小朋友</h3>
+              <p className="profile__hint">
+                刪除咗嘅小朋友會保留 {DELETED_RETENTION_DAYS} 日，之後會自動清除。
+                <br />
+                Deleted profiles are kept for {DELETED_RETENTION_DAYS} days.
+              </p>
+              {deletedProfiles.length === 0 ? (
+                <p className="profile__hint">冇可以還原嘅小朋友。Nothing to restore.</p>
+              ) : (
+                <div className="profile__deleted-list">
+                  {deletedProfiles.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className="profile__item profile__item--deleted"
+                      onClick={() => handleRestore(p)}
+                    >
+                      <span className="profile__avatar">{p.avatar}</span>
+                      <span className="profile__deleted-info">
+                        <span className="profile__name">{p.name}</span>
+                        <span className="profile__deleted-meta">
+                          仲有 {daysLeft(p.deletedAt)} 日 · {daysLeft(p.deletedAt)} days left
+                        </span>
+                      </span>
+                      <span aria-hidden="true">♻️</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="profile__form-actions">
+                <button type="button" className="btn btn--ghost btn--small" onClick={() => setMode('list')}>
+                  返回 Back
                 </button>
               </div>
             </div>
