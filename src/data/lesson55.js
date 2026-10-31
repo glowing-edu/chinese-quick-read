@@ -1,0 +1,73 @@
+// 第五十五課 Lesson 55 — 生字
+export const CHARACTERS = [
+  { char: '呼', jyutping: 'fu1', word: '呼吸', wordJyutping: 'fu1 kap1', emoji: '😮‍💨', meaning: 'breathe/call' },
+  { char: '結', jyutping: 'git3', word: '結冰', wordJyutping: 'git3 bing1', emoji: '🧊', meaning: 'freeze/knot' },
+  { char: '冰', jyutping: 'bing1', word: '冰水', wordJyutping: 'bing1 seoi2', emoji: '🧊', meaning: 'ice' },
+  { char: '枝', jyutping: 'zi1', word: '樹枝', wordJyutping: 'syu6 zi1', emoji: '🌿', meaning: 'branch' },
+  { char: '發', jyutping: 'faat3', word: '發現', wordJyutping: 'faat3 jin6', emoji: '🔍', meaning: 'discover/send' },
+  { char: '抖', jyutping: 'dau2', word: '發抖', wordJyutping: 'faat3 dau2', emoji: '🥶', meaning: 'tremble' },
+  { char: '暖', jyutping: 'nyun5', word: '溫暖', wordJyutping: 'wan1 nyun5', emoji: '🌞', meaning: 'warm' },
+  { char: '屋', jyutping: 'uk1', word: '房屋', wordJyutping: 'fong4 uk1', emoji: '🏠', meaning: 'house' },
+  { char: '法', jyutping: 'faat3', word: '方法', wordJyutping: 'fong1 faat3', emoji: '💡', meaning: 'method/law' },
+  { char: '件', jyutping: 'gin6', word: '一件衫', wordJyutping: 'jat1 gin6 saam1', emoji: '👕', meaning: '(classifier for items)' },
+  { char: '於', jyutping: 'jyu1', word: '關於', wordJyutping: 'gwaan1 jyu1', emoji: 'ℹ️', meaning: 'about/at' },
+]
+
+// 讀詞語 Reading words
+export const WORDS = [
+  { word: '洗手', jyutping: 'sai2 sau2', emoji: '🧼', meaning: 'wash hands', requires: ['洗', '手'] },
+  { word: '洗臉', jyutping: 'sai2 lim5', emoji: '🧼', meaning: 'wash face', requires: ['洗', '臉'] },
+  { word: '清洗', jyutping: 'cing1 sai2', emoji: '🧽', meaning: 'clean', requires: ['清', '洗'] },
+  { word: '忽然', jyutping: 'fat1 jin4', emoji: '⚡', meaning: 'suddenly', requires: ['忽', '然'] },
+  { word: '然後', jyutping: 'jin4 hau6', emoji: '➡️', meaning: 'then', requires: ['然', '後'] },
+  { word: '全身', jyutping: 'cyun4 san1', emoji: '🧍', meaning: 'whole body', requires: ['全', '身'] },
+  { word: '全家', jyutping: 'cyun4 gaa1', emoji: '👨‍👩‍👧', meaning: 'whole family', requires: ['全', '家'] },
+  { word: '全班', jyutping: 'cyun4 baan1', emoji: '👥', meaning: 'whole class', requires: ['全', '班'] },
+  { word: '全力', jyutping: 'cyun4 lik6', emoji: '💪', meaning: 'with all one’s strength', requires: ['全', '力'] },
+  { word: '全面', jyutping: 'cyun4 min6', emoji: '🌐', meaning: 'all-round', requires: ['全', '面'] },
+  { word: '一條路', jyutping: 'jat1 tiu4 lou6', emoji: '🛣️', meaning: 'one road', requires: ['一', '條', '路'] },
+  { word: '兩條魚', jyutping: 'loeng5 tiu4 jyu2', emoji: '🐟', meaning: 'two fish', requires: ['兩', '條', '魚'] },
+  { word: '條子', jyutping: 'tiu4 zi2', emoji: '📏', meaning: 'strip/note', requires: ['條', '子'] },
+  { word: '柳條', jyutping: 'lau5 tiu4', emoji: '🌿', meaning: 'willow branch', requires: ['柳', '條'] },
+  { word: '怪人', jyutping: 'gwaai3 jan4', emoji: '👤', meaning: 'strange person', requires: ['怪', '人'] },
+  { word: '怪物', jyutping: 'gwaai3 mat6', emoji: '👾', meaning: 'monster', requires: ['怪', '物'] },
+  { word: '怪樣', jyutping: 'gwaai3 joeng6', emoji: '😲', meaning: 'strange look', requires: ['怪', '樣'] },
+  { word: '怪不得', jyutping: 'gwaai3 bat1 dak1', emoji: '💡', meaning: 'no wonder', requires: ['怪', '不', '得'] },
+  { word: '動物', jyutping: 'dung6 mat6', emoji: '🐾', meaning: 'animal', requires: ['動', '物'] },
+  { word: '生物', jyutping: 'sang1 mat6', emoji: '🧬', meaning: 'living thing', requires: ['生', '物'] },
+  { word: '大豬', jyutping: 'daai6 zyu1', emoji: '🐷', meaning: 'big pig', requires: ['大', '豬'] },
+  { word: '小豬', jyutping: 'siu2 zyu1', emoji: '🐖', meaning: 'piglet', requires: ['小', '豬'] },
+  { word: '影子', jyutping: 'jing2 zi2', emoji: '🌑', meaning: 'shadow', requires: ['影', '子'] },
+  { word: '倒影', jyutping: 'dou3 jing2', emoji: '🌊', meaning: 'reflection', requires: ['倒', '影'] },
+  { word: '電影', jyutping: 'din6 jing2', emoji: '🎬', meaning: 'movie', requires: ['電', '影'] },
+  { word: '來信', jyutping: 'loi4 seon3', emoji: '📩', meaning: 'incoming letter', requires: ['來', '信'] },
+  { word: '去信', jyutping: 'heoi3 seon3', emoji: '📤', meaning: 'outgoing letter', requires: ['去', '信'] },
+  { word: '寫信', jyutping: 'se2 seon3', emoji: '✍️', meaning: 'write a letter', requires: ['寫', '信'] },
+  { word: '信不信', jyutping: 'seon3 bat1 seon3', emoji: '❓', meaning: 'believe it or not', requires: ['信', '不'] },
+  { word: '信心', jyutping: 'seon3 sam1', emoji: '💪', meaning: 'confidence', requires: ['信', '心'] },
+]
+
+// 讀句子 Sentences
+export const SENTENCES = [
+  {
+    title: '怪物',
+    sentence: [
+      '一天，小猴子去河邊洗手，忽然，牠看見水裏有一個全身長毛，還有一條長尾巴的怪物正看着牠。這可把小猴子嚇壞了。',
+      '小猴子趕快就跑，上氣不接下氣地跑到小豬家：「河裏有個全身長毛，還有一條長尾巴的怪物，好可怕啊！」',
+      '「真的？帶我去看看。」',
+      '「我不去，我怕。」',
+      '「我們一起去，就不怕了。」',
+      '牠們兩個來到河邊，小豬往河裏看，看見一個大嘴巴、大耳朵、鼻子朝天的怪物正看着牠。',
+      '「呀！快跑，真有怪物！」',
+      '小豬和小猴子沒命地跑。',
+      '「小豬，小猴子，你們跑那麼快，是要到哪裏去呀？」大象問道。',
+      '「河裏有個大嘴巴、大耳朵、鼻子朝天的怪物。」',
+      '「不對，是個全身長毛，還有條長尾巴的怪物，好可怕的。」',
+      '「啊！我知道啦。」大象笑了起來，「那不是怪物，是你們自己的倒影。不信，你們再回去看看。」小豬和小猴子又回到河邊：「原來這就是倒影啊！」',
+      '牠們兩個，我看看你，你看看我，都笑了。',
+      '河裏的“怪物”也笑了。',
+    ],
+    jyutping: '',
+    meaning: '',
+  },
+]

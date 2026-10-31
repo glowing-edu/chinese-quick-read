@@ -1,0 +1,73 @@
+// 第四十四課 Lesson 44 — 生字
+export const CHARACTERS = [
+  { char: '圓', jyutping: 'jyun4', word: '圓形', wordJyutping: 'jyun4 jing4', emoji: '⭕', meaning: 'round/circle' },
+  { char: '圈', jyutping: 'hyun1', word: '圈子', wordJyutping: 'hyun1 zi2', emoji: '🔵', meaning: 'circle/ring' },
+  { char: '親', jyutping: 'can1', word: '親人', wordJyutping: 'can1 jan4', emoji: '👨‍👩‍👧', meaning: 'relative/close' },
+  { char: '臉', jyutping: 'lim5', word: '洗臉', wordJyutping: 'sai2 lim5', emoji: '😊', meaning: 'face' },
+  { char: '眼', jyutping: 'ngaan5', word: '眼睛', wordJyutping: 'ngaan5 zing1', emoji: '👀', meaning: 'eye' },
+  { char: '更', jyutping: 'gang3', word: '更好', wordJyutping: 'gang3 hou2', emoji: '⬆️', meaning: 'even more' },
+  { char: '接', jyutping: 'zip3', word: '接住', wordJyutping: 'zip3 zyu6', emoji: '🤲', meaning: 'catch/receive' },
+  { char: '外', jyutping: 'ngoi6', word: '外面', wordJyutping: 'ngoi6 min6', emoji: '🚪', meaning: 'outside' },
+]
+
+// 讀詞語 Reading words
+export const WORDS = [
+  { word: '鬍子', jyutping: 'wu4 zi2', emoji: '🧔', meaning: 'beard', requires: ['鬍', '子'] },
+  { word: '胡說', jyutping: 'wu4 syut3', emoji: '🗣️', meaning: 'talk nonsense', requires: ['胡', '說'] },
+  { word: '胡來', jyutping: 'wu4 loi4', emoji: '🙅', meaning: 'act recklessly', requires: ['胡', '來'] },
+  { word: '胡說八道', jyutping: 'wu4 syut3 baat3 dou6', emoji: '🗣️', meaning: 'talk nonsense', requires: ['胡', '說', '八', '道'] },
+  { word: '胡同', jyutping: 'wu4 tung4', emoji: '🏘️', meaning: 'alley', requires: ['胡', '同'] },
+  { word: '老虎', jyutping: 'lou5 fu2', emoji: '🐯', meaning: 'tiger', requires: ['老', '虎'] },
+  { word: '虎口', jyutping: 'fu2 hau2', emoji: '🐯', meaning: 'tiger’s mouth/danger', requires: ['虎', '口'] },
+  { word: '虎牙', jyutping: 'fu2 ngaa4', emoji: '🦷', meaning: 'canine tooth', requires: ['虎', '牙'] },
+  { word: '貼着', jyutping: 'tip3 zoek6', emoji: '🏷️', meaning: 'sticking', requires: ['貼', '着'] },
+  { word: '貼上', jyutping: 'tip3 soeng5', emoji: '🏷️', meaning: 'stick on', requires: ['貼', '上'] },
+  { word: '貼心', jyutping: 'tip3 sam1', emoji: '💞', meaning: 'thoughtful', requires: ['貼', '心'] },
+  { word: '人才', jyutping: 'jan4 coi4', emoji: '🌟', meaning: 'talent', requires: ['人', '才'] },
+  { word: '天才', jyutping: 'tin1 coi4', emoji: '🧠', meaning: 'genius', requires: ['天', '才'] },
+  { word: '才氣', jyutping: 'coi4 hei3', emoji: '🎨', meaning: 'talent/flair', requires: ['才', '氣'] },
+  { word: '才能', jyutping: 'coi4 nang4', emoji: '💪', meaning: 'ability', requires: ['才', '能'] },
+  { word: '數字', jyutping: 'sou3 zi6', emoji: '🔢', meaning: 'number/numeral', requires: ['數', '字'] },
+  { word: '數目', jyutping: 'sou3 muk6', emoji: '🔢', meaning: 'number/amount', requires: ['數', '目'] },
+  { word: '數學', jyutping: 'sou3 hok6', emoji: '➗', meaning: 'mathematics', requires: ['數', '學'] },
+  { word: '數一數', jyutping: 'sou2 jat1 sou2', emoji: '🔢', meaning: 'count', requires: ['數', '一'] },
+  { word: '數一數二', jyutping: 'sou2 jat1 sou2 ji6', emoji: '🥇', meaning: 'among the best', requires: ['數', '一', '二'] },
+  { word: '數落', jyutping: 'sou2 lok6', emoji: '🗯️', meaning: 'scold/criticize', requires: ['數', '落'] },
+  { word: '更好', jyutping: 'gang3 hou2', emoji: '⬆️', meaning: 'better', requires: ['更', '好'] },
+  { word: '更大', jyutping: 'gang3 daai6', emoji: '⬆️', meaning: 'bigger', requires: ['更', '大'] },
+  { word: '更小', jyutping: 'gang3 siu2', emoji: '⬇️', meaning: 'smaller', requires: ['更', '小'] },
+  { word: '更多', jyutping: 'gang3 do1', emoji: '➕', meaning: 'more', requires: ['更', '多'] },
+  { word: '更少', jyutping: 'gang3 siu2', emoji: '➖', meaning: 'less', requires: ['更', '少'] },
+  { word: '更長', jyutping: 'gang3 coeng4', emoji: '📏', meaning: 'longer', requires: ['更', '長'] },
+  { word: '更冷', jyutping: 'gang3 laang5', emoji: '🥶', meaning: 'colder', requires: ['更', '冷'] },
+  { word: '更黑', jyutping: 'gang3 hak1', emoji: '🌑', meaning: 'darker', requires: ['更', '黑'] },
+  { word: '更新', jyutping: 'gang3 san1', emoji: '🔄', meaning: 'newer/update', requires: ['更', '新'] },
+  { word: '更加', jyutping: 'gang3 gaa1', emoji: '⬆️', meaning: 'even more', requires: ['更', '加'] },
+  { word: '更正', jyutping: 'gang3 zing3', emoji: '✏️', meaning: 'correct', requires: ['更', '正'] },
+  { word: '變更', jyutping: 'bin3 gang1', emoji: '🔁', meaning: 'change/alter', requires: ['變', '更'] },
+  { word: '花朵', jyutping: 'faa1 do2', emoji: '🌸', meaning: 'flower', requires: ['花', '朵'] },
+  { word: '雲朵', jyutping: 'wan4 do2', emoji: '☁️', meaning: 'cloud', requires: ['雲', '朵'] },
+  { word: '朵朵', jyutping: 'do2 do2', emoji: '🌼', meaning: 'blossoms (many)', requires: ['朵'] },
+  { word: '耳朵', jyutping: 'ji5 do2', emoji: '👂', meaning: 'ear', requires: ['耳', '朵'] },
+  { word: '一張紙', jyutping: 'jat1 zoeng1 zi2', emoji: '📄', meaning: 'a sheet of paper', requires: ['一', '張', '紙'] },
+  { word: '白紙', jyutping: 'baak6 zi2', emoji: '📄', meaning: 'white paper', requires: ['白', '紙'] },
+  { word: '紅紙', jyutping: 'hung4 zi2', emoji: '📕', meaning: 'red paper', requires: ['紅', '紙'] },
+  { word: '黃紙', jyutping: 'wong4 zi2', emoji: '📒', meaning: 'yellow paper', requires: ['黃', '紙'] },
+  { word: '紙張', jyutping: 'zi2 zoeng1', emoji: '📄', meaning: 'paper', requires: ['紙', '張'] },
+  { word: '紙盒', jyutping: 'zi2 hap6', emoji: '📦', meaning: 'cardboard box', requires: ['紙', '盒'] },
+]
+
+// 讀句子 Sentences
+export const SENTENCES = [
+  {
+    title: '山羊爺爺的鬍子',
+    sentence: [
+      '山羊爺爺有一大把漂亮的鬍子，牠天天都對牠的朋友們說：「誰也沒有我這麼漂亮的鬍子。獅子沒有，老虎沒有，老狼也沒有。只有我山羊爺爺有。哈哈！你們是不是很想學我，也貼上一把鬍子呢？」',
+      '獅子、老虎、老狼都在想：「是啊，我們是沒有山羊爺爺那麼一大把漂亮的鬍子。」不過，誰也沒想去貼鬍子。',
+      '可是，山羊爺爺的兒子對山羊爺爺說：「老爸，你的鬍子是很漂亮，我的鬍子也很好看。可是，我的兒子小山羊天天哭。牠說，牠的朋友們都在笑話牠。大家都問牠，你這麼小，怎麼就長了鬍子呢？我不知道怎麼說，牠才不會哭，才能高興起來？」',
+      '山羊爺爺想了又想：「是呀，牠這麼小怎麼也會長鬍子呢？」想來想去，山羊爺爺還是沒有想明白。',
+    ],
+    jyutping: '',
+    meaning: '',
+  },
+]

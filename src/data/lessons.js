@@ -34,6 +34,36 @@ import { CHARACTERS as rev3Characters, WORDS as rev3Words, SENTENCES as rev3Sent
 import { CHARACTERS as lesson31Characters, WORDS as lesson31Words, SENTENCES as lesson31Sentences } from './lesson31'
 import { CHARACTERS as lesson32Characters, WORDS as lesson32Words, SENTENCES as lesson32Sentences } from './lesson32'
 import { CHARACTERS as lesson33Characters, WORDS as lesson33Words, SENTENCES as lesson33Sentences } from './lesson33'
+import { CHARACTERS as lesson34Characters, WORDS as lesson34Words, SENTENCES as lesson34Sentences } from './lesson34'
+import { CHARACTERS as lesson35Characters, WORDS as lesson35Words, SENTENCES as lesson35Sentences } from './lesson35'
+import { CHARACTERS as lesson36Characters, WORDS as lesson36Words, SENTENCES as lesson36Sentences } from './lesson36'
+import { CHARACTERS as lesson37Characters, WORDS as lesson37Words, SENTENCES as lesson37Sentences } from './lesson37'
+import { CHARACTERS as lesson38Characters, WORDS as lesson38Words, SENTENCES as lesson38Sentences } from './lesson38'
+import { CHARACTERS as lesson39Characters, WORDS as lesson39Words, SENTENCES as lesson39Sentences } from './lesson39'
+import { CHARACTERS as lesson40Characters, WORDS as lesson40Words, SENTENCES as lesson40Sentences } from './lesson40'
+import { CHARACTERS as rev4Characters, WORDS as rev4Words, SENTENCES as rev4Sentences } from './lessonRev4'
+import { CHARACTERS as lesson41Characters, WORDS as lesson41Words, SENTENCES as lesson41Sentences } from './lesson41'
+import { CHARACTERS as lesson42Characters, WORDS as lesson42Words, SENTENCES as lesson42Sentences } from './lesson42'
+import { CHARACTERS as lesson43Characters, WORDS as lesson43Words, SENTENCES as lesson43Sentences } from './lesson43'
+import { CHARACTERS as lesson44Characters, WORDS as lesson44Words, SENTENCES as lesson44Sentences } from './lesson44'
+import { CHARACTERS as lesson45Characters, WORDS as lesson45Words, SENTENCES as lesson45Sentences } from './lesson45'
+import { CHARACTERS as lesson46Characters, WORDS as lesson46Words, SENTENCES as lesson46Sentences } from './lesson46'
+import { CHARACTERS as lesson47Characters, WORDS as lesson47Words, SENTENCES as lesson47Sentences } from './lesson47'
+import { CHARACTERS as lesson48Characters, WORDS as lesson48Words, SENTENCES as lesson48Sentences } from './lesson48'
+import { CHARACTERS as lesson49Characters, WORDS as lesson49Words, SENTENCES as lesson49Sentences } from './lesson49'
+import { CHARACTERS as lesson50Characters, WORDS as lesson50Words, SENTENCES as lesson50Sentences } from './lesson50'
+import { CHARACTERS as rev5Characters, WORDS as rev5Words, SENTENCES as rev5Sentences } from './lessonRev5'
+import { CHARACTERS as lesson51Characters, WORDS as lesson51Words, SENTENCES as lesson51Sentences } from './lesson51'
+import { CHARACTERS as lesson52Characters, WORDS as lesson52Words, SENTENCES as lesson52Sentences } from './lesson52'
+import { CHARACTERS as lesson53Characters, WORDS as lesson53Words, SENTENCES as lesson53Sentences } from './lesson53'
+import { CHARACTERS as lesson54Characters, WORDS as lesson54Words, SENTENCES as lesson54Sentences } from './lesson54'
+import { CHARACTERS as lesson55Characters, WORDS as lesson55Words, SENTENCES as lesson55Sentences } from './lesson55'
+import { CHARACTERS as lesson56Characters, WORDS as lesson56Words, SENTENCES as lesson56Sentences } from './lesson56'
+import { CHARACTERS as lesson57Characters, WORDS as lesson57Words, SENTENCES as lesson57Sentences } from './lesson57'
+import { CHARACTERS as lesson58Characters, WORDS as lesson58Words, SENTENCES as lesson58Sentences } from './lesson58'
+import { CHARACTERS as lesson59Characters, WORDS as lesson59Words, SENTENCES as lesson59Sentences } from './lesson59'
+import { CHARACTERS as lesson60Characters, WORDS as lesson60Words, SENTENCES as lesson60Sentences } from './lesson60'
+import { CHARACTERS as rev6Characters, WORDS as rev6Words, SENTENCES as rev6Sentences } from './lessonRev6'
 
 // All lessons in order.
 export const LESSONS = [
@@ -73,6 +103,36 @@ export const LESSONS = [
   { id: 34, title: '第三十一課', titleEn: 'Lesson 31', characters: lesson31Characters, words: lesson31Words, sentences: lesson31Sentences },
   { id: 35, title: '第三十二課', titleEn: 'Lesson 32', characters: lesson32Characters, words: lesson32Words, sentences: lesson32Sentences },
   { id: 36, title: '第三十三課', titleEn: 'Lesson 33', characters: lesson33Characters, words: lesson33Words, sentences: lesson33Sentences },
+  { id: 37, title: '第三十四課', titleEn: 'Lesson 34', characters: lesson34Characters, words: lesson34Words, sentences: lesson34Sentences },
+  { id: 38, title: '第三十五課', titleEn: 'Lesson 35', characters: lesson35Characters, words: lesson35Words, sentences: lesson35Sentences },
+  { id: 39, title: '第三十六課', titleEn: 'Lesson 36', characters: lesson36Characters, words: lesson36Words, sentences: lesson36Sentences },
+  { id: 40, title: '第三十七課', titleEn: 'Lesson 37', characters: lesson37Characters, words: lesson37Words, sentences: lesson37Sentences },
+  { id: 41, title: '第三十八課', titleEn: 'Lesson 38', characters: lesson38Characters, words: lesson38Words, sentences: lesson38Sentences },
+  { id: 42, title: '第三十九課', titleEn: 'Lesson 39', characters: lesson39Characters, words: lesson39Words, sentences: lesson39Sentences },
+  { id: 43, title: '第四十課', titleEn: 'Lesson 40', characters: lesson40Characters, words: lesson40Words, sentences: lesson40Sentences },
+  { id: 44, title: '溫習四', titleEn: 'Revision 4', characters: rev4Characters, words: rev4Words, sentences: rev4Sentences },
+  { id: 45, title: '第四十一課', titleEn: 'Lesson 41', characters: lesson41Characters, words: lesson41Words, sentences: lesson41Sentences },
+  { id: 46, title: '第四十二課', titleEn: 'Lesson 42', characters: lesson42Characters, words: lesson42Words, sentences: lesson42Sentences },
+  { id: 47, title: '第四十三課', titleEn: 'Lesson 43', characters: lesson43Characters, words: lesson43Words, sentences: lesson43Sentences },
+  { id: 48, title: '第四十四課', titleEn: 'Lesson 44', characters: lesson44Characters, words: lesson44Words, sentences: lesson44Sentences },
+  { id: 49, title: '第四十五課', titleEn: 'Lesson 45', characters: lesson45Characters, words: lesson45Words, sentences: lesson45Sentences },
+  { id: 50, title: '第四十六課', titleEn: 'Lesson 46', characters: lesson46Characters, words: lesson46Words, sentences: lesson46Sentences },
+  { id: 51, title: '第四十七課', titleEn: 'Lesson 47', characters: lesson47Characters, words: lesson47Words, sentences: lesson47Sentences },
+  { id: 52, title: '第四十八課', titleEn: 'Lesson 48', characters: lesson48Characters, words: lesson48Words, sentences: lesson48Sentences },
+  { id: 53, title: '第四十九課', titleEn: 'Lesson 49', characters: lesson49Characters, words: lesson49Words, sentences: lesson49Sentences },
+  { id: 54, title: '第五十課', titleEn: 'Lesson 50', characters: lesson50Characters, words: lesson50Words, sentences: lesson50Sentences },
+  { id: 55, title: '溫習五', titleEn: 'Revision 5', characters: rev5Characters, words: rev5Words, sentences: rev5Sentences },
+  { id: 56, title: '第五十一課', titleEn: 'Lesson 51', characters: lesson51Characters, words: lesson51Words, sentences: lesson51Sentences },
+  { id: 57, title: '第五十二課', titleEn: 'Lesson 52', characters: lesson52Characters, words: lesson52Words, sentences: lesson52Sentences },
+  { id: 58, title: '第五十三課', titleEn: 'Lesson 53', characters: lesson53Characters, words: lesson53Words, sentences: lesson53Sentences },
+  { id: 59, title: '第五十四課', titleEn: 'Lesson 54', characters: lesson54Characters, words: lesson54Words, sentences: lesson54Sentences },
+  { id: 60, title: '第五十五課', titleEn: 'Lesson 55', characters: lesson55Characters, words: lesson55Words, sentences: lesson55Sentences },
+  { id: 61, title: '第五十六課', titleEn: 'Lesson 56', characters: lesson56Characters, words: lesson56Words, sentences: lesson56Sentences },
+  { id: 62, title: '第五十七課', titleEn: 'Lesson 57', characters: lesson57Characters, words: lesson57Words, sentences: lesson57Sentences },
+  { id: 63, title: '第五十八課', titleEn: 'Lesson 58', characters: lesson58Characters, words: lesson58Words, sentences: lesson58Sentences },
+  { id: 64, title: '第五十九課', titleEn: 'Lesson 59', characters: lesson59Characters, words: lesson59Words, sentences: lesson59Sentences },
+  { id: 65, title: '第六十課', titleEn: 'Lesson 60', characters: lesson60Characters, words: lesson60Words, sentences: lesson60Sentences },
+  { id: 66, title: '溫習六', titleEn: 'Revision 6', characters: rev6Characters, words: rev6Words, sentences: rev6Sentences },
 ]
 
 export function buildCharLessonMap() {

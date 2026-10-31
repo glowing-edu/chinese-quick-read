@@ -1,0 +1,70 @@
+// 第五十八課 Lesson 58 — 生字
+export const CHARACTERS = [
+  { char: '騎', jyutping: 'ke4', word: '騎馬', wordJyutping: 'ke4 maa5', emoji: '🐎', meaning: 'ride' },
+  { char: '行', jyutping: 'haang4', word: '行走', wordJyutping: 'haang4 zau2', emoji: '🚶', meaning: 'walk/go' },
+  { char: '遠', jyutping: 'jyun5', word: '遠方', wordJyutping: 'jyun5 fong1', emoji: '🏞️', meaning: 'far' },
+  { char: '經', jyutping: 'ging1', word: '經過', wordJyutping: 'ging1 gwo3', emoji: '➡️', meaning: 'pass/through' },
+  { char: '旁', jyutping: 'pong4', word: '旁邊', wordJyutping: 'pong4 bin1', emoji: '📍', meaning: 'beside' },
+  { char: '嬸', jyutping: 'sam2', word: '嬸嬸', wordJyutping: 'sam2 sam2', emoji: '👩', meaning: 'aunt' },
+  { char: '呵', jyutping: 'ho1', word: '呵護', wordJyutping: 'ho1 wu6', emoji: '🤗', meaning: 'care for/oh' },
+  { char: '稀', jyutping: 'hei1', word: '稀少', wordJyutping: 'hei1 siu2', emoji: '🔍', meaning: 'rare/sparse' },
+  { char: '奇', jyutping: 'kei4', word: '奇怪', wordJyutping: 'kei4 gwaai3', emoji: '❓', meaning: 'strange' },
+]
+
+// 讀詞語 Reading words
+export const WORDS = [
+  { word: '整個', jyutping: 'zing2 go3', emoji: '🌐', meaning: 'whole', requires: ['整', '個'] },
+  { word: '整理', jyutping: 'zing2 lei5', emoji: '🧹', meaning: 'tidy', requires: ['整', '理'] },
+  { word: '還給', jyutping: 'waan4 kap1', emoji: '🤲', meaning: 'return to', requires: ['還', '給'] },
+  { word: '還書', jyutping: 'waan4 syu1', emoji: '📚', meaning: 'return a book', requires: ['還', '書'] },
+  { word: '還手', jyutping: 'waan4 sau2', emoji: '✊', meaning: 'hit back', requires: ['還', '手'] },
+  { word: '還東西', jyutping: 'waan4 dung1 sai1', emoji: '📦', meaning: 'return things', requires: ['還', '東', '西'] },
+  { word: '送還', jyutping: 'sung3 waan4', emoji: '📤', meaning: 'return/send back', requires: ['送', '還'] },
+  { word: '覺得', jyutping: 'gok3 dak1', emoji: '💭', meaning: 'feel', requires: ['覺', '得'] },
+  { word: '蓋子', jyutping: 'goi3 zi2', emoji: '🫙', meaning: 'lid', requires: ['蓋', '子'] },
+  { word: '蓋着', jyutping: 'goi3 zoek6', emoji: '🧢', meaning: 'covering', requires: ['蓋', '着'] },
+  { word: '可憐', jyutping: 'ho2 lin4', emoji: '😢', meaning: 'pitiful', requires: ['可', '憐'] },
+  { word: '憐愛', jyutping: 'lin4 oi3', emoji: '❤️', meaning: 'tender love', requires: ['憐', '愛'] },
+  { word: '鳥窩', jyutping: 'niu5 wo1', emoji: '🪹', meaning: 'bird nest', requires: ['鳥', '窩'] },
+  { word: '心窩', jyutping: 'sam1 wo1', emoji: '💖', meaning: 'heart', requires: ['心', '窩'] },
+  { word: '窩頭', jyutping: 'wo1 tau4', emoji: '🍞', meaning: 'steamed bun', requires: ['窩', '頭'] },
+  { word: '着急', jyutping: 'zoek6 gap1', emoji: '😰', meaning: 'anxious', requires: ['着', '急'] },
+  { word: '着火', jyutping: 'zoek6 fo2', emoji: '🔥', meaning: 'on fire', requires: ['着', '火'] },
+  { word: '睡着了', jyutping: 'seoi6 zoek6 liu5', emoji: '😴', meaning: 'asleep', requires: ['睡', '着', '了'] },
+  { word: '病人', jyutping: 'beng6 jan4', emoji: '🤒', meaning: 'patient', requires: ['病', '人'] },
+  { word: '生病', jyutping: 'saang1 beng6', emoji: '🤒', meaning: 'get sick', requires: ['生', '病'] },
+  { word: '看病', jyutping: 'hon3 beng6', emoji: '🩺', meaning: 'see a doctor', requires: ['看', '病'] },
+  { word: '病倒', jyutping: 'beng6 dou2', emoji: '🛌', meaning: 'fall ill', requires: ['病', '倒'] },
+  { word: '大病', jyutping: 'daai6 beng6', emoji: '🏥', meaning: 'serious illness', requires: ['大', '病'] },
+  { word: '小病', jyutping: 'siu2 beng6', emoji: '🤧', meaning: 'minor illness', requires: ['小', '病'] },
+  { word: '受害', jyutping: 'sau6 hoi6', emoji: '😣', meaning: 'suffer harm', requires: ['受', '害'] },
+  { word: '受到', jyutping: 'sau6 dou3', emoji: '🫲', meaning: 'receive', requires: ['受', '到'] },
+  { word: '難受', jyutping: 'naan4 sau6', emoji: '😣', meaning: 'uncomfortable', requires: ['難', '受'] },
+  { word: '接受', jyutping: 'zip3 sau6', emoji: '🤲', meaning: 'accept', requires: ['接', '受'] },
+  { word: '羽毛', jyutping: 'jyu5 mou4', emoji: '🪶', meaning: 'feather', requires: ['羽', '毛'] },
+  { word: '望着', jyutping: 'mong6 zoek6', emoji: '👀', meaning: 'looking at', requires: ['望', '着'] },
+  { word: '望見', jyutping: 'mong6 gin3', emoji: '👀', meaning: 'see', requires: ['望', '見'] },
+  { word: '看望', jyutping: 'hon3 mong6', emoji: '👋', meaning: 'visit', requires: ['看', '望'] },
+]
+
+// 讀句子 Sentences
+export const SENTENCES = [
+  {
+    title: '帽子鳥窩',
+    sentence: [
+      '冬天到了，北風呼呼地吹，天氣很冷，有一隻小鳥真可憐，牠在樹枝上直發抖。',
+      '一位老爺爺走過來，牠看見小鳥在樹枝上發抖，就問小鳥：「你為什麼不回家？在這裏發抖？」',
+      '小鳥說：「風把我們的鳥窩吹走了，我們沒有家了。」',
+      '老爺爺說：「別着急，我來幫你們想辦法。」老爺爺就用自己的帽子給小鳥做了鳥窩。老爺爺的帽子可真暖和！',
+      '小鳥想，樹林裏還有很多怕冷的小鳥，一定也在發抖，快把牠們也叫來吧。',
+      '於是，小鳥們都飛進了老爺爺的帽子裏，真暖和呀！牠們高興地唱着歌：「小鳥飛來，小鳥飛來，爺爺的帽子真暖和。謝謝爺爺，謝謝爺爺，住在這裏不冷了。」',
+      '以後，老爺爺天天都來看望小鳥，聽小鳥們唱歌，大家都很開心。',
+      '可是，有一天，老爺爺沒有來。原來老爺爺病了。',
+      '小鳥們想，一定是老爺爺把帽子給了我們，他自己受涼生了病。我們來給他做一頂帽子吧。',
+      '於是，小鳥們就用自己的羽毛做成了一頂帽子送給了老爺爺。',
+      '過了幾天，老爺爺病好了，他又來看望小鳥，小鳥們又唱起了快樂的歌。',
+    ],
+    jyutping: '',
+    meaning: '',
+  },
+]

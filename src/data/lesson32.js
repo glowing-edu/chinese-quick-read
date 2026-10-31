@@ -41,27 +41,23 @@ export const WORDS = [
 // 讀句子 Sentences
 export const SENTENCES = [
   {
-    sentence:
-      '小明在山上跑步，一不小心就摔了。他的頭好痛，就大聲喊起來。',
-    jyutping:
-      'siu2 ming4 zoi6 saan1 soeng6 paau2 bou6，jat1 bat1 siu2 sam1 zau6 seot1 liu5。taa1 dik1 tau4 hou2 tung3，zau6 daai6 seng1 haam3 hei2 loi4',
-    meaning:
-      'Xiaoming was running on the hill and fell. His head hurt, so he started crying loudly.',
+    sentence: [
+      '媽媽不在家，燕燕哭著要找媽媽。',
+      '小椅子跑過來說：“燕燕不哭，燕燕不哭。坐在我身上，我來做你的媽媽。”燕燕看著小椅子，還是哭。',
+      '小桌子跑過來說：“燕燕不哭，燕燕不哭。坐在我身上，我來做你的媽媽。”燕燕看著小桌子，還是哭。',
+      '布猴子跑過來說：“燕燕不哭，燕燕不哭。把我跑起來，你來做我的媽媽。”燕燕看著布猴子，不哭了。',
+      '她抱起布猴子，和它玩起了“過家家”的遊戲。',
+    ],
+    jyutping: '',
+    meaning: '',
   },
   {
-    sentence:
-      '媽媽聽到大喊聲，就來問：「誰在喊呢？是誰摔了？」小明認得媽媽，就說：「是我！原來是我摔了！」',
-    jyutping:
-      'maa1 maa1 teng1 dou3 daai6 haam3 seng1，zau6 loi4 man6：「seoi4 zoi6 haam3 ne1？si6 seoi4 seot1 liu5？」siu2 ming4 jing6 dak1 maa1 maa1，zau6 syut3：「si6 ngo5！jyun4 loi4 si6 ngo5 seot1 liu5！」',
-    meaning:
-      'Mum heard the loud crying and came to ask: "Who is crying? Who fell?" Xiaoming recognised Mum and said: "It is me! It turns out I fell!"',
-  },
-  {
-    sentence:
-      '媽媽說：「不要哭，我來抱你。很快就不痛了。」小明笑了，說：「謝謝媽媽！我會小心，不會再摔了。」',
-    jyutping:
-      'maa1 maa1 syut3：「bat1 jiu3 huk1，ngo5 loi4 pou5 nei5。han2 faai3 zau6 bat1 tung3 liu5。」siu2 ming4 siu3 liu5，syut3：「ze6 ze6 maa1 maa1！ngo5 wui5 siu2 sam1，bat1 wui5 zoi3 seot1 liu5。」',
-    meaning:
-      'Mum said: "Do not cry, I will hug you. It will stop hurting soon." Xiaoming laughed and said: "Thank you, Mum! I will be careful and will not fall again."',
+    sentence: [
+      '我家有我的小桌子和小椅子。我的書和文具盒都放在桌子上面。',
+      '我有很多好看的書，文具盒裡還有筆、小刀和尺子。我天天都坐在桌子後面的小椅子上看書，畫畫。',
+      '我愛我的小桌子和小椅子。它們都是我的好朋友。',
+    ],
+    jyutping: '',
+    meaning: '',
   },
 ]
