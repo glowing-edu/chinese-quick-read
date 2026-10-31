@@ -59,6 +59,8 @@ export default function App() {
 
   const lesson = LESSONS.find((l) => l.id === lessonId) ?? LESSONS[0]
   const sentences = lesson.sentences ?? []
+  const words = lesson.words ?? []
+  const hasWords = words.length > 0
 
   // Voices may load asynchronously — refresh once they're ready.
   useEffect(() => {
@@ -112,7 +114,15 @@ export default function App() {
   }
 
   // Revisions have no characters, so the Learn tab is never available.
-  const activeTab = isRevision && tab === 'learn' ? 'words' : tab
+  // Lessons without words skip the Words tab and stay on Learn.
+  const activeTab =
+    isRevision && tab === 'learn'
+      ? hasWords
+        ? 'words'
+        : 'sentences'
+      : !hasWords && tab === 'words'
+        ? 'learn'
+        : tab
 
   const handleLearn = (item) => {
     markHeard(item.char)
@@ -291,13 +301,15 @@ export default function App() {
                 📖 學生字<span className="tab__en"> Learn</span>
               </button>
             )}
-            <button
-              type="button"
-              className={`tab${activeTab === 'words' ? ' tab--active' : ''}`}
-              onClick={() => switchTab('words')}
-            >
-              📚 讀詞語<span className="tab__en"> Words</span>
-            </button>
+            {hasWords && (
+              <button
+                type="button"
+                className={`tab${activeTab === 'words' ? ' tab--active' : ''}`}
+                onClick={() => switchTab('words')}
+              >
+                📚 讀詞語<span className="tab__en"> Words</span>
+              </button>
+            )}
             {sentences.length > 0 && (
               <button
                 type="button"
@@ -324,9 +336,11 @@ export default function App() {
                 <div className="banner">
                   🎉 好叻呀！{lesson.title} {total} 個生字全部學完！Lesson complete!
                   <span className="banner__actions">
-                    <button type="button" className="banner__cta" onClick={() => switchTab('words')}>
-                      去讀詞語 📚
-                    </button>
+                    {hasWords && (
+                      <button type="button" className="banner__cta" onClick={() => switchTab('words')}>
+                        去讀詞語 📚
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="banner__cta banner__cta--alt"
