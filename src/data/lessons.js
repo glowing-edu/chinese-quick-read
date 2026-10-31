@@ -32,6 +32,7 @@ import { CHARACTERS as lesson29Characters, WORDS as lesson29Words, SENTENCES as 
 import { CHARACTERS as lesson30Characters, WORDS as lesson30Words, SENTENCES as lesson30Sentences } from './lesson30'
 import { CHARACTERS as rev3Characters, WORDS as rev3Words, SENTENCES as rev3Sentences } from './lessonRev3'
 import { CHARACTERS as lesson31Characters, WORDS as lesson31Words, SENTENCES as lesson31Sentences } from './lesson31'
+import { CHARACTERS as lesson32Characters, WORDS as lesson32Words, SENTENCES as lesson32Sentences } from './lesson32'
 
 // All lessons in order.
 export const LESSONS = [
@@ -69,6 +70,7 @@ export const LESSONS = [
   { id: 32, title: '第三十課', titleEn: 'Lesson 30', characters: lesson30Characters, words: lesson30Words, sentences: lesson30Sentences },
   { id: 33, title: '溫習三', titleEn: 'Revision 3', characters: rev3Characters, words: rev3Words, sentences: rev3Sentences },
   { id: 34, title: '第三十一課', titleEn: 'Lesson 31', characters: lesson31Characters, words: lesson31Words, sentences: lesson31Sentences },
+  { id: 35, title: '第三十二課', titleEn: 'Lesson 32', characters: lesson32Characters, words: lesson32Words, sentences: lesson32Sentences },
 ]
 
 export function buildCharLessonMap() {
