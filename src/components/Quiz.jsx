@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { STAR_RESULTS } from '../lib/profiles'
 import { speak, stopSpeaking } from '../lib/speech'
 
@@ -32,10 +32,15 @@ function pickTestCharacters(characters, starsFor) {
 function buildRoundFor(characters, starsFor) {
   const picked = pickTestCharacters(characters, starsFor)
   return shuffle(picked).map((answer) => {
-    const distractors = shuffle(characters.filter((c) => c !== answer)).slice(
-      0,
-      OPTION_COUNT - 1,
-    )
+    // Keep every option sounding different so the answer is never ambiguous.
+    const heard = new Set([answer.jyutping])
+    const distractors = []
+    for (const candidate of shuffle(characters)) {
+      if (candidate === answer || heard.has(candidate.jyutping)) continue
+      heard.add(candidate.jyutping)
+      distractors.push(candidate)
+      if (distractors.length === OPTION_COUNT - 1) break
+    }
     return { answer, options: shuffle([answer, ...distractors]) }
   })
 }
@@ -57,6 +62,7 @@ export default function Quiz({
   const [results, setResults] = useState([]) // true/false for answered questions
   const [score, setScore] = useState(0)
   const [timer, setTimer] = useState(null)
+  const listenRef = useRef(null)
 
   const question = round[index]
   const total = round.length
@@ -68,6 +74,13 @@ export default function Quiz({
     const t = setTimeout(() => say(round[index].answer.char), 400)
     return () => clearTimeout(t)
   }, [phase, index, round])
+
+  // Move focus to the listen button on each question so a previously tapped
+  // option doesn't keep its focus ring into the next question.
+  useEffect(() => {
+    if (phase !== 'play') return
+    listenRef.current?.focus()
+  }, [phase, index])
 
   // Stop any audio when leaving the quiz.
   useEffect(() => stopSpeaking, [])
@@ -193,7 +206,12 @@ export default function Quiz({
         <span className="quiz__score">⭐ {score}</span>
       </div>
 
-      <button type="button" className="quiz__listen" onClick={() => say(question.answer.char)}>
+      <button
+        ref={listenRef}
+        type="button"
+        className="quiz__listen"
+        onClick={() => say(question.answer.char)}
+      >
         <span className="quiz__listen-icon" aria-hidden="true">
           🔊
         </span>
