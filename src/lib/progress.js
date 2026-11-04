@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react'
 import {
   STAR_RESULTS,
   DELETED_RETENTION_DAYS,
-  freshProgress,
   initProfiles,
   createProfile as createProfileApi,
   switchProfile as switchProfileApi,
@@ -84,8 +83,6 @@ export function useProgress() {
     [update],
   )
 
-  const reset = useCallback(() => update(() => freshProgress()), [update])
-
   const switchProfile = useCallback((id) => {
     const res = switchProfileApi(id)
     if (!res) return
@@ -157,7 +154,6 @@ export function useProgress() {
     markSentenceRead,
     recordCharResult,
     recordQuiz,
-    reset,
     switchProfile,
     addProfile,
     renameProfile,

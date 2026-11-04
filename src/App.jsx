@@ -37,7 +37,6 @@ export default function App() {
     markSentenceRead,
     recordCharResult,
     recordQuiz,
-    reset,
     switchProfile: switchProfileBase,
     addProfile,
     renameProfile,
@@ -139,13 +138,6 @@ export default function App() {
     speak(item.sentence, { rate: 0.7 })
   }
 
-  const handleReset = () => {
-    const answer = window.prompt('重設進度？請輸入 reset 確認。\nReset all progress for this profile? Type reset to confirm.')
-    if (answer === 'reset') {
-      reset()
-    }
-  }
-
   return (
     <div className="app">
       <header className="topbar">
@@ -155,12 +147,7 @@ export default function App() {
           </span>
           <div>
             <h1 className="brand__title">Kinderchi 學中文</h1>
-            <p className="brand__sub">
-              幼稚園廣東話 · {lesson.title} {lesson.titleEn}
-              {!isRevision && ` · ${total} 個生字`}
-              {!isRevision && lesson.words.length > 0 && ` · ${lesson.words.length} 個詞語`}
-              {!isRevision && sentences.length > 0 && ` · ${sentences.length} 個句子`}
-            </p>
+            <p className="brand__sub">幼稚園廣東話</p>
           </div>
         </div>
         <div className="topbar__actions">
@@ -407,15 +394,6 @@ export default function App() {
               />
             </main>
           )}
-
-          <footer className="footer">
-            <span>
-              進度會儲存喺呢部裝置嘅瀏覽器 · Progress is saved on this device (localStorage)
-            </span>
-            <button type="button" className="reset-link" onClick={handleReset}>
-              重設進度 Reset
-            </button>
-          </footer>
         </div>
       </div>
     </div>

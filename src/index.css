@@ -26,6 +26,7 @@ html,
 body {
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 
 body {
@@ -50,9 +51,11 @@ body {
 }
 
 #root {
-  min-height: 100svh;
+  height: 100dvh;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 button {
@@ -67,6 +70,7 @@ button {
   flex-direction: column;
   gap: 16px;
   flex: 1;
+  min-height: 0;
 }
 
 /* ===== Header ===== */
@@ -1198,35 +1202,6 @@ button {
   visibility: hidden;
 }
 
-/* ===== Footer ===== */
-
-.footer {
-  margin-top: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  justify-content: center;
-  color: var(--ink-soft);
-  font-size: 13px;
-  border-top: 2px dashed var(--line);
-  padding-top: 14px;
-}
-
-.reset-link {
-  background: none;
-  border: none;
-  color: var(--ink-soft);
-  font-size: 13px;
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 4px;
-}
-
-.reset-link:hover {
-  color: var(--bad);
-}
-
 /* ===== Animations ===== */
 
 @keyframes pop {
@@ -1317,7 +1292,9 @@ button {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
 .layout:has(.sidebar--collapsed) {
@@ -1329,15 +1306,16 @@ button {
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .sidebar {
-  position: sticky;
-  top: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: calc(100dvh - 32px);
+  min-height: 0;
+  height: 100%;
   overflow: hidden;
 }
 
