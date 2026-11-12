@@ -1,5 +1,6 @@
 export default function WordCard({ item, learned, read, lessonOf, onRead }) {
-  const missing = item.requires.filter((c) => !learned.includes(c))
+  const requires = [...new Set(item.requires)]
+  const missing = requires.filter((c) => !learned.includes(c))
   const locked = missing.length > 0
 
   if (locked) {
@@ -18,7 +19,7 @@ export default function WordCard({ item, learned, read, lessonOf, onRead }) {
         </span>
         <span className="wordcard__hint">
           先學 · Learn first:
-          {item.requires.map((c) => (
+          {requires.map((c) => (
             <span
               key={c}
               className={`chip${missing.includes(c) ? ' chip--missing' : ' chip--have'}`}

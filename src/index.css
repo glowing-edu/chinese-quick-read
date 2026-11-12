@@ -534,15 +534,16 @@ button {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 14px;
+  min-width: 0;
 }
 
 .grid--words {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 @media (max-width: 640px) {
   .grid--words {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -556,6 +557,8 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  max-width: 100%;
   cursor: pointer;
   user-select: none;
   box-shadow: 0 5px 0 var(--line);
@@ -593,7 +596,7 @@ button {
 .card__stars {
   position: absolute;
   top: -12px;
-  right: -8px;
+  right: 4px;
   display: flex;
   gap: 1px;
   font-size: 18px;
@@ -640,11 +643,16 @@ button {
   background: #f1edff;
   border-radius: 999px;
   padding: 3px 12px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .card__word {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 6px;
   background: #effaf6;
   border: 2px solid #c9efe4;
@@ -654,6 +662,14 @@ button {
   font-weight: 700;
   color: #17705c;
   cursor: pointer;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.card__wordtext {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .card__word:hover {
@@ -674,6 +690,9 @@ button {
 .card__meaning {
   font-size: 13px;
   color: var(--ink-soft);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 /* ===== Word drill (reading) ===== */
@@ -702,6 +721,8 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  max-width: 100%;
   cursor: pointer;
   user-select: none;
   box-shadow: 0 5px 0 var(--line);
@@ -736,7 +757,7 @@ button {
 .wordcard__badge {
   position: absolute;
   top: -12px;
-  right: -8px;
+  right: 4px;
   font-size: 24px;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.15));
   animation: pop 0.35s ease;
@@ -764,10 +785,12 @@ button {
   font-size: clamp(36px, 5.5vw, 52px);
   font-weight: 800;
   line-height: 1.12;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: center;
   text-align: center;
   max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .wordcard__text--long {
@@ -787,6 +810,9 @@ button {
   background: #f1edff;
   border-radius: 999px;
   padding: 3px 12px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .wordcard__hint {
@@ -806,6 +832,9 @@ button {
 .wordcard__meaning {
   font-size: 13px;
   color: var(--ink-soft);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .chip {
@@ -847,7 +876,7 @@ button {
 /* ===== Sentence drill (reading sentences) ===== */
 
 .grid--sentences {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .sentence {
@@ -860,6 +889,8 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  max-width: 100%;
   cursor: pointer;
   user-select: none;
   box-shadow: 0 5px 0 var(--line);
@@ -894,7 +925,7 @@ button {
 .sentence__badge {
   position: absolute;
   top: -12px;
-  right: -8px;
+  right: 4px;
   font-size: 24px;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.15));
   animation: pop 0.35s ease;
@@ -923,6 +954,8 @@ button {
   width: 100%;
   margin-bottom: 4px;
   color: var(--ink);
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .sentence__text {
@@ -933,6 +966,8 @@ button {
   text-align: justify;
   text-justify: inter-character;
   white-space: pre-line;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .sentence__text--dim {
@@ -949,12 +984,16 @@ button {
   padding: 5px 12px;
   text-align: center;
   line-height: 1.6;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .sentence__meaning {
   font-size: 13px;
   color: var(--ink-soft);
   text-align: center;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 /* ===== Quiz ===== */
@@ -1255,7 +1294,7 @@ button {
 
 @media (max-width: 560px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
@@ -1307,6 +1346,7 @@ button {
   gap: 16px;
   min-width: 0;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
