@@ -2,6 +2,13 @@
 // Signs in with Puter's account system and stores progress in the user's
 // own Puter space.
 
+import {
+  loadAllCustomLessons,
+  mergeCustomLessons,
+  normalizeCustomLessons,
+  saveCustomLessons,
+} from './customLessons.js'
+
 const PUTER_KEY = 'kinderchi-profiles-backup-v1'
 const SYNC_STATE_KEY = 'kinderchi-puter-sync-state'
 
@@ -114,6 +121,9 @@ export async function getCloudSummary() {
   const snapshot = await loadFromPuter()
   if (!snapshot) return null
   const active = snapshot.profiles.filter((p) => !p.deletedAt)
+  const customLessons = normalizeCustomLessons(snapshot.customLessons).filter(
+    (lesson) => !lesson.deletedAt,
+  )
   return {
     updatedAt: snapshot.updatedAt || 0,
     profiles: active.map((p) => ({
@@ -122,6 +132,7 @@ export async function getCloudSummary() {
       avatar: p.avatar,
     })),
     deletedCount: snapshot.profiles.length - active.length,
+    customLessonCount: customLessons.length,
   }
 }
 
@@ -158,6 +169,7 @@ export function createSnapshot() {
       updatedAt: Date.now(),
       profiles,
       progress,
+      customLessons: loadAllCustomLessons(),
       currentId,
     }
   } catch (err) {
@@ -240,6 +252,10 @@ export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
     updatedAt: Date.now(),
     profiles: [...(cloudSnapshot.profiles || [])],
     progress: JSON.parse(JSON.stringify(cloudSnapshot.progress || {})),
+    customLessons: mergeCustomLessons(
+      localSnapshot.customLessons,
+      cloudSnapshot.customLessons,
+    ),
     currentId: cloudSnapshot.currentId,
   }
 
@@ -284,8 +300,8 @@ export function mergeSnapshotsForUpload(localSnapshot, cloudSnapshot) {
 function getFingerprint(snapshot) {
   if (!snapshot) return null
   try {
-    // Only care about profiles and progress, not timestamps
-    return JSON.stringify([snapshot.profiles, snapshot.progress])
+    // Only care about profiles, progress and custom lessons, not timestamps.
+    return JSON.stringify([snapshot.profiles, snapshot.progress, snapshot.customLessons || []])
   } catch {
     return null
   }
@@ -299,7 +315,7 @@ function readLocal() {
     const raw = localStorage.getItem(PROGRESS_PREFIX + p.id)
     if (raw) progress[p.id] = JSON.parse(raw)
   }
-  return { profiles, progress }
+  return { profiles, progress, customLessons: loadAllCustomLessons() }
 }
 
 // Write a snapshot into localStorage.
@@ -323,8 +339,7 @@ export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
       profiles = cloudSnapshot.profiles.map((p) => ({ ...p }))
       progress = JSON.parse(JSON.stringify(cloudSnapshot.progress || {}))
       currentId = cloudSnapshot.currentId
-    } else {
-      profiles = cloudSnapshot.profiles.map((p) => ({ ...p }))
+    } else {      profiles = cloudSnapshot.profiles.map((p) => ({ ...p }))
       progress = JSON.parse(JSON.stringify(cloudSnapshot.progress || {}))
       currentId = cloudSnapshot.currentId
 
@@ -357,6 +372,11 @@ export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
       }
     }
 
+    const cloudLessons = normalizeCustomLessons(cloudSnapshot.customLessons)
+    const customLessons = preserveLocalAsNew
+      ? mergeCustomLessons(local.customLessons, cloudLessons)
+      : cloudLessons
+
     // Drop progress belonging to profiles that are no longer around.
     const keep = new Set(profiles.map((p) => p.id))
     for (const id of Object.keys(progress)) {
@@ -385,6 +405,7 @@ export function applySnapshotToLocal(cloudSnapshot, preserveLocalAsNew = true) {
         localStorage.removeItem(PROGRESS_PREFIX + localProfile.id)
       }
     }
+    saveCustomLessons(customLessons)
 
     const after = getFingerprint(createSnapshot())
     return { ok: true, changed: before !== after }

@@ -235,6 +235,12 @@ export default function PuterSync({ profiles = [], onDeleteProfile }) {
                         另有 {cloud.deletedCount} 個已刪除（保留中）· {cloud.deletedCount} deleted (kept)
                       </p>
                     )}
+                    {cloud.customLessonCount > 0 && (
+                      <p style={{ margin: '4px 0 0', fontSize: '12px' }}>
+                        {cloud.customLessonCount} 個自訂課堂 · {cloud.customLessonCount} custom lesson
+                        {cloud.customLessonCount === 1 ? '' : 's'}
+                      </p>
+                    )}
                   </>
                 )}
               </div>
@@ -300,9 +306,10 @@ export default function PuterSync({ profiles = [], onDeleteProfile }) {
                 登出 Sign Out
               </button>
               <p style={{ margin: '12px 0 0 0', fontSize: '11px', color: '#666' }}>
-                上載只會合併，唔會刪除雲端嘅小朋友。本機有但雲端冇嘅小朋友會先問你。
+                上載只會合併，唔會刪除雲端嘅小朋友。本機有但雲端冇嘅小朋友會先問你。自訂課堂亦會一齊同步。
                 <br />
-                Uploads only merge. No cloud profile is ever deleted automatically.
+                Uploads only merge. No cloud profile is ever deleted automatically. Custom lessons
+                are synced too.
               </p>
             </div>
           )}

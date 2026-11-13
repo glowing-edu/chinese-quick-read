@@ -14,6 +14,17 @@ function shuffle(list) {
   return arr
 }
 
+// Use jyutping to keep options sounding different. Without jyutping, fall back
+// to the character so custom lessons still get a full set of options.
+function optionKey(item) {
+  return item.jyutping?.trim() || item.char
+}
+
+function answerDetails(item) {
+  const word = item.word && item.word !== item.char ? item.word : ''
+  return [item.jyutping, word, item.emoji].filter(Boolean).join(' · ')
+}
+
 // Pick which characters to test. Prioritises characters that don't yet have
 // 3 stars, capped at half the round, then fills the rest with any character.
 function pickTestCharacters(characters, starsFor) {
@@ -33,11 +44,11 @@ function buildRoundFor(characters, starsFor) {
   const picked = pickTestCharacters(characters, starsFor)
   return shuffle(picked).map((answer) => {
     // Keep every option sounding different so the answer is never ambiguous.
-    const heard = new Set([answer.jyutping])
+    const heard = new Set([optionKey(answer)])
     const distractors = []
     for (const candidate of shuffle(characters)) {
-      if (candidate === answer || heard.has(candidate.jyutping)) continue
-      heard.add(candidate.jyutping)
+      if (candidate === answer || heard.has(optionKey(candidate))) continue
+      heard.add(optionKey(candidate))
       distractors.push(candidate)
       if (distractors.length === OPTION_COUNT - 1) break
     }
@@ -188,6 +199,7 @@ export default function Quiz({
 
   const answered = picked !== null
   const wasCorrect = answered && picked === question.answer
+  const details = answered ? answerDetails(question.answer) : ''
 
   return (
     <section className="quiz">
@@ -246,14 +258,13 @@ export default function Quiz({
             <strong>{wasCorrect ? '✔ 啱喇！' : '✘ 唔啱喎 — '}</strong>
             {!wasCorrect && (
               <span>
-                係「{question.answer.char}」 {question.answer.jyutping} · {question.answer.word}{' '}
-                {question.answer.emoji}
+                係「{question.answer.char}」{details && ` ${details}`}
               </span>
             )}
             {wasCorrect && (
               <span>
-                {question.answer.char} · {question.answer.jyutping} · {question.answer.word}{' '}
-                {question.answer.emoji}
+                {question.answer.char}
+                {details && ` · ${details}`}
               </span>
             )}
           </>

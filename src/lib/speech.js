@@ -1,5 +1,8 @@
 // Cantonese text-to-speech via the browser's Web Speech API.
-// Prefers a Hong Kong / Cantonese voice; falls back to whatever zh voice exists.
+// Prefers a user-selected voice, then a Hong Kong / Cantonese voice, then
+// falls back to whatever zh voice exists.
+
+const VOICE_KEY = 'kinderchi-voice-uri-v1'
 
 function isCantoneseVoice(voice) {
   const lang = (voice.lang || '').replace('_', '-')
@@ -17,12 +20,35 @@ function pickVoice() {
   if (!canSpeak()) return null
   const voices = window.speechSynthesis.getVoices()
   if (!voices.length) return null
+  const selectedURI = getSelectedVoiceURI()
+  const selected = selectedURI ? voices.find((v) => v.voiceURI === selectedURI) : null
   return (
+    selected ||
     voices.find(isCantoneseVoice) ||
     voices.find((v) => /^zh[-_]?(Hant|TW|HK)/i.test(v.lang || '')) ||
     voices.find((v) => /^zh/i.test(v.lang || '')) ||
     null
   )
+}
+
+export function getSelectedVoiceURI() {
+  if (typeof localStorage === 'undefined') return null
+  try {
+    return localStorage.getItem(VOICE_KEY) || null
+  } catch {
+    return null
+  }
+}
+
+// Pass null/'' to go back to the automatic Cantonese voice.
+export function setSelectedVoiceURI(uri) {
+  if (typeof localStorage === 'undefined') return
+  try {
+    if (uri) localStorage.setItem(VOICE_KEY, uri)
+    else localStorage.removeItem(VOICE_KEY)
+  } catch {
+    // Ignore unavailable storage; the current session still uses the fallback.
+  }
 }
 
 export function canSpeak() {

@@ -18,7 +18,7 @@ export default function CharacterCard({
       className={`card${heard ? ' card--heard' : ''}`}
       role="button"
       tabIndex={0}
-      aria-label={`生字 ${item.char}，粵拼 ${item.jyutping}，${stars} 粒星`}
+      aria-label={`生字 ${item.char}${item.jyutping ? `，粵拼 ${item.jyutping}` : ''}，${stars} 粒星`}
       onClick={onLearn}
       onKeyDown={handleKeyDown}
     >
@@ -39,7 +39,7 @@ export default function CharacterCard({
         🔊
       </span>
       <span className="card__char">{item.char}</span>
-      <span className="card__jyut">{item.jyutping}</span>
+      {item.jyutping && <span className="card__jyut">{item.jyutping}</span>}
       <button
         type="button"
         className="card__word"
@@ -56,9 +56,11 @@ export default function CharacterCard({
             </span>
           ))}
         </span>
-        <span className="card__emoji" aria-hidden="true">
-          {item.emoji}
-        </span>
+        {item.emoji && (
+          <span className="card__emoji" aria-hidden="true">
+            {item.emoji}
+          </span>
+        )}
       </button>
       <span className="card__meaning">{item.meaning}</span>
     </div>
