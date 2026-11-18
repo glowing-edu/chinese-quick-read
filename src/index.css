@@ -22,6 +22,14 @@
   color-scheme: light;
 }
 
+@font-face {
+  font-family: 'Free HK Kai 4700';
+  src: url('./assets/Free-HK-Kai_4700-v1.02.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 html,
 body {
   margin: 0;
@@ -1298,6 +1306,10 @@ button {
     gap: 10px;
   }
 
+  .grid--sentences {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .quiz__options {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1762,4 +1774,17 @@ button {
   .lesson-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===== Lesson content font ===== */
+
+.card__char,
+.card__wordtext,
+.wordcard__text,
+.sentence__title,
+.sentence__text,
+.opt__char,
+.chip {
+  font-family: 'Free HK Kai 4700', 'PingFang HK', 'Noto Sans HK', sans-serif;
+  font-weight: 400;
 }
