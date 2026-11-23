@@ -7,7 +7,12 @@ import SentenceDrill from './components/SentenceDrill.jsx'
 import Settings from './components/Settings.jsx'
 import WordDrill from './components/WordDrill.jsx'
 import { LESSONS, buildCharLessonMap } from './data/lessons.js'
-import { createCustomLesson, deleteCustomLesson, loadCustomLessons } from './lib/customLessons.js'
+import {
+  CUSTOM_LESSONS_CHANGED_EVENT,
+  deleteCustomLesson,
+  importCustomLesson,
+  loadCustomLessons,
+} from './lib/customLessons.js'
 import { useProgress } from './lib/progress.js'
 import { starsForChar, starsForLesson, resultsForChar, totalStars, STAR_RESULTS } from './lib/profiles.js'
 import {
@@ -126,14 +131,15 @@ export default function App() {
     setTab(nextLesson && nextLesson.characters.length === 0 ? 'words' : 'learn')
   }
 
-  const handleCreateCustomLesson = (data) => {
-    const result = createCustomLesson(customLessons, data)
+  const handleImportCustomLesson = (data) => {
+    const result = importCustomLesson(customLessons, data)
     if (!result) return null
     stopSpeaking()
     setCustomLessons(result.lessons)
     setLessonId(result.lesson.id)
     setTab('learn')
-    return result.lesson
+    window.dispatchEvent(new Event(CUSTOM_LESSONS_CHANGED_EVENT))
+    return result
   }
 
   const handleDeleteCustomLesson = (id) => {
@@ -144,6 +150,7 @@ export default function App() {
       setLessonId(LESSONS[0].id)
       setTab('learn')
     }
+    window.dispatchEvent(new Event(CUSTOM_LESSONS_CHANGED_EVENT))
   }
 
   const handleSelectVoice = (uri) => {
@@ -234,7 +241,7 @@ export default function App() {
           customLessons={customLessons}
           voices={availableVoices}
           selectedVoiceURI={selectedVoiceURI}
-          onCreateLesson={handleCreateCustomLesson}
+          onImportLesson={handleImportCustomLesson}
           onDeleteLesson={handleDeleteCustomLesson}
           onSelectVoice={handleSelectVoice}
           onClose={() => setView('lessons')}

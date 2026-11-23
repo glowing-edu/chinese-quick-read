@@ -1,11 +1,14 @@
 // User-created lessons. These live in localStorage and are shown above the
-// built-in lessons. They contain characters only (Learn + Game tabs).
+// built-in lessons. They can contain characters, words, sentences and a game.
 //
 // Lessons carry a stable `uid` so they can be merged safely through Puter sync,
 // and deletions are kept as tombstones so they are not resurrected by a sync.
 
+export const CUSTOM_LESSONS_CHANGED_EVENT = 'kinderchi:custom-lessons-changed'
+
 const CUSTOM_LESSONS_KEY = 'kinderchi-custom-lessons-v1'
 const CUSTOM_ID_START = 1000
+const HAN_RE = /[一-鿿]/
 
 function cleanText(value, fallback = '') {
   return typeof value === 'string' ? value.trim() : fallback
@@ -23,6 +26,16 @@ function newUid() {
   return `lesson-${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
+function uniqueBy(items, keyFor) {
+  const seen = new Set()
+  return items.filter((item) => {
+    const key = keyFor(item)
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 function normalizeCharacter(item) {
   if (!item || typeof item !== 'object') return null
   const char = cleanText(item.char)
@@ -38,14 +51,60 @@ function normalizeCharacter(item) {
   }
 }
 
+function normalizeWord(item) {
+  if (!item || typeof item !== 'object') return null
+  const word = cleanText(item.word)
+  if (!word) return null
+  let requires = item.requires
+  if (typeof requires === 'string') {
+    requires = requires.split(/[,，、;；|\s]+/)
+  }
+  const derived = [...word].filter((char) => HAN_RE.test(char))
+  return {
+    word,
+    jyutping: cleanText(item.jyutping),
+    emoji: cleanText(item.emoji),
+    meaning: cleanText(item.meaning),
+    requires: uniqueBy(
+      (Array.isArray(requires) ? requires : derived).map((char) => cleanText(char)).filter(Boolean),
+      (char) => char,
+    ),
+  }
+}
+
+function normalizeSentence(item) {
+  if (!item || typeof item !== 'object') return null
+  const raw = item.sentence ?? item.text
+  const sentence = Array.isArray(raw)
+    ? raw.map((line) => cleanText(line)).filter(Boolean)
+    : cleanText(raw)
+  if (Array.isArray(sentence) ? sentence.length === 0 : !sentence) return null
+  return {
+    title: cleanText(item.title),
+    sentence,
+    jyutping: cleanText(item.jyutping),
+    meaning: cleanText(item.meaning),
+  }
+}
+
 function normalizeLesson(item) {
   if (!item || typeof item !== 'object') return null
   const id = Number(item.id)
   if (!Number.isFinite(id)) return null
-  const characters = Array.isArray(item.characters)
-    ? item.characters.map(normalizeCharacter).filter(Boolean)
-    : []
+  const characters = uniqueBy(
+    (Array.isArray(item.characters) ? item.characters.map(normalizeCharacter).filter(Boolean) : []),
+    (character) => character.char,
+  )
   if (characters.length === 0) return null
+  const words = uniqueBy(
+    (Array.isArray(item.words) ? item.words.map(normalizeWord).filter(Boolean) : []),
+    (word) => word.word,
+  )
+  const sentences = uniqueBy(
+    (Array.isArray(item.sentences) ? item.sentences.map(normalizeSentence).filter(Boolean) : []),
+    (sentence) =>
+      Array.isArray(sentence.sentence) ? sentence.sentence.join('\n') : sentence.sentence,
+  )
 
   const title = cleanText(item.title, '我嘅課堂')
   const createdAt = timestamp(item.createdAt)
@@ -58,11 +117,12 @@ function normalizeLesson(item) {
   return {
     id,
     uid,
+    sourceId: cleanText(item.sourceId) || cleanText(item.slug),
     title,
     titleEn: cleanText(item.titleEn, 'My lesson'),
     characters,
-    words: [],
-    sentences: [],
+    words,
+    sentences,
     custom: true,
     createdAt,
     updatedAt,
@@ -105,24 +165,51 @@ export function saveCustomLessons(lessons) {
   }
 }
 
-export function createCustomLesson(lessons, { title, titleEn, characters }) {
+export function importCustomLesson(lessons, data) {
   const all = loadAllCustomLessons()
   const source = all.length > 0 ? all : lessons
-  const maxId = source.reduce((max, lesson) => Math.max(max, Number(lesson.id) || 0), CUSTOM_ID_START - 1)
+  const title = cleanText(data.title) || '我嘅課堂'
+  const titleEn = cleanText(data.titleEn) || 'My lesson'
+  const sourceId = cleanText(data.sourceId)
+  const existing =
+    (sourceId ? source.find((lesson) => lesson.sourceId === sourceId) : null) ||
+    source.find((lesson) => lesson.title === title)
+
   const now = Date.now()
+  if (existing) {
+    const stamp = Math.max(now, (existing.updatedAt || 0) + 1)
+    const lesson = normalizeLesson({
+      ...data,
+      id: existing.id,
+      uid: existing.uid,
+      sourceId: sourceId || existing.sourceId,
+      title,
+      titleEn,
+      createdAt: existing.createdAt || now,
+      updatedAt: stamp,
+      deletedAt: 0,
+    })
+    if (!lesson) return null
+    const next = source.map((item) => (item.id === existing.id ? lesson : item))
+    saveCustomLessons(next)
+    return { lesson, lessons: activeCustomLessons(next), updated: true }
+  }
+
+  const maxId = source.reduce((max, lesson) => Math.max(max, Number(lesson.id) || 0), CUSTOM_ID_START - 1)
   const lesson = normalizeLesson({
+    ...data,
     id: maxId + 1,
     uid: newUid(),
+    sourceId,
+    title,
+    titleEn,
     createdAt: now,
     updatedAt: now,
-    title: cleanText(title) || '我嘅課堂',
-    titleEn: cleanText(titleEn) || 'My lesson',
-    characters,
   })
   if (!lesson) return null
   const next = [lesson, ...source]
   saveCustomLessons(next)
-  return { lesson, lessons: activeCustomLessons(next) }
+  return { lesson, lessons: activeCustomLessons(next), updated: false }
 }
 
 export function deleteCustomLesson(lessons, id) {

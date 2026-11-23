@@ -16,6 +16,10 @@ function isCantoneseVoice(voice) {
   )
 }
 
+function isChineseVoice(voice) {
+  return /^zh|^yue/i.test(voice.lang || '')
+}
+
 function pickVoice() {
   if (!canSpeak()) return null
   const voices = window.speechSynthesis.getVoices()
@@ -23,7 +27,7 @@ function pickVoice() {
   const selectedURI = getSelectedVoiceURI()
   const selected = selectedURI ? voices.find((v) => v.voiceURI === selectedURI) : null
   return (
-    selected ||
+    (selected && isChineseVoice(selected) ? selected : null) ||
     voices.find(isCantoneseVoice) ||
     voices.find((v) => /^zh[-_]?(Hant|TW|HK)/i.test(v.lang || '')) ||
     voices.find((v) => /^zh/i.test(v.lang || '')) ||
@@ -63,7 +67,7 @@ export function hasCantoneseVoice() {
 
 export function hasChineseVoice() {
   if (!canSpeak()) return false
-  return window.speechSynthesis.getVoices().some((v) => /^zh|^yue/i.test(v.lang || ''))
+  return window.speechSynthesis.getVoices().some(isChineseVoice)
 }
 
 export function speak(text, { rate = 0.75, pitch = 1.1 } = {}) {

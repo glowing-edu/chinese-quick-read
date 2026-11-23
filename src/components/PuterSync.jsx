@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePuterSync } from '../hooks/usePuterSync'
+import { CUSTOM_LESSONS_CHANGED_EVENT } from '../lib/customLessons'
 import { getCloudSummary, getLocalOnlyProfiles } from '../lib/puterSync'
 
 const formatTime = (ts) => {
@@ -43,6 +44,16 @@ export default function PuterSync({ profiles = [], onDeleteProfile }) {
   useEffect(() => {
     if (open && signedIn) refreshCloud()
   }, [open, signedIn, refreshCloud])
+
+  // Custom lesson imports/deletes are saved locally first. If the user is
+  // already signed in, push the merged snapshot so the change reaches the cloud.
+  useEffect(() => {
+    const handleCustomLessonsChanged = () => {
+      if (signedIn) sync()
+    }
+    window.addEventListener(CUSTOM_LESSONS_CHANGED_EVENT, handleCustomLessonsChanged)
+    return () => window.removeEventListener(CUSTOM_LESSONS_CHANGED_EVENT, handleCustomLessonsChanged)
+  }, [signedIn, sync])
 
   const busy = syncing || loadingCloud || checking
 
