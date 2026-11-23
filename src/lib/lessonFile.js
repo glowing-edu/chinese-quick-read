@@ -427,3 +427,118 @@ ID: my-custom-lesson
 | --- | --- | --- | --- |
 | 我愛家人。 | ngo5 oi3 gaa1 jan4 | I love my family. | 我嘅家 |
 `
+
+function exportSourceId(lesson) {
+  const sourceId = cleanText(lesson?.sourceId)
+  if (sourceId) return sourceId
+  if (lesson?.custom) {
+    return `custom-${cleanText(lesson.uid) || lesson.id || 'lesson'}`
+  }
+  return `lesson-${lesson?.id ?? 'custom'}`
+}
+
+function oneLine(value) {
+  return cleanText(value).replace(/\s+/g, ' ')
+}
+
+function markdownCell(value) {
+  const text = Array.isArray(value) ? value.join('\n') : value
+  return String(text ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/\r?\n/g, '<br>')
+}
+
+function markdownRow(cells) {
+  return `| ${cells.map(markdownCell).join(' | ')} |`
+}
+
+export function lessonToJson(lesson) {
+  const data = {
+    id: exportSourceId(lesson),
+    title: cleanText(lesson?.title),
+    titleEn: cleanText(lesson?.titleEn),
+    characters: (lesson?.characters || []).map((item) => ({
+      char: cleanText(item.char),
+      jyutping: cleanText(item.jyutping),
+      word: cleanText(item.word),
+      wordJyutping: cleanText(item.wordJyutping),
+      emoji: cleanText(item.emoji),
+      meaning: cleanText(item.meaning),
+    })),
+    words: (lesson?.words || []).map((item) => ({
+      word: cleanText(item.word),
+      jyutping: cleanText(item.jyutping),
+      emoji: cleanText(item.emoji),
+      meaning: cleanText(item.meaning),
+      requires: Array.isArray(item.requires) ? item.requires : [],
+    })),
+    sentences: (lesson?.sentences || []).map((item) => ({
+      title: cleanText(item.title),
+      sentence: Array.isArray(item.sentence) ? item.sentence : cleanText(item.sentence),
+      jyutping: cleanText(item.jyutping),
+      meaning: cleanText(item.meaning),
+    })),
+  }
+  return `${JSON.stringify(data, null, 2)}\n`
+}
+
+export function lessonToMarkdown(lesson) {
+  const title = oneLine(lesson?.title) || 'Lesson'
+  const titleEn = oneLine(lesson?.titleEn)
+  const lines = [`# ${title}`, '']
+
+  if (titleEn) lines.push(`English: ${titleEn}`)
+  lines.push(`ID: ${oneLine(exportSourceId(lesson))}`, '')
+
+  lines.push(
+    '## 生字 Characters',
+    '',
+    '| 字 | 粵拼 | 詞語 | 詞語粵拼 | Emoji | 意思 |',
+    '| --- | --- | --- | --- | --- | --- |',
+  )
+  for (const item of lesson?.characters || []) {
+    lines.push(
+      markdownRow([
+        item.char,
+        item.jyutping,
+        item.word,
+        item.wordJyutping,
+        item.emoji,
+        item.meaning,
+      ]),
+    )
+  }
+
+  lines.push(
+    '',
+    '## 詞語 Words',
+    '',
+    '| 詞語 | 粵拼 | Emoji | 意思 | 需要生字 |',
+    '| --- | --- | --- | --- | --- |',
+  )
+  for (const item of lesson?.words || []) {
+    lines.push(
+      markdownRow([
+        item.word,
+        item.jyutping,
+        item.emoji,
+        item.meaning,
+        Array.isArray(item.requires) ? item.requires.join(' ') : '',
+      ]),
+    )
+  }
+
+  lines.push(
+    '',
+    '## 句子 Sentences',
+    '',
+    '| 句子 | 粵拼 | 意思 | 標題 |',
+    '| --- | --- | --- | --- |',
+  )
+  for (const item of lesson?.sentences || []) {
+    lines.push(markdownRow([item.sentence, item.jyutping, item.meaning, item.title]))
+  }
+
+  return `${lines.join('\n')}\n`
+}

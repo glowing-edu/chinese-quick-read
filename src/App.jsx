@@ -13,6 +13,8 @@ import {
   importCustomLesson,
   loadCustomLessons,
 } from './lib/customLessons.js'
+import { downloadTextFile } from './lib/download.js'
+import { lessonToJson, lessonToMarkdown } from './lib/lessonFile.js'
 import { useProgress } from './lib/progress.js'
 import { starsForChar, starsForLesson, resultsForChar, totalStars, STAR_RESULTS } from './lib/profiles.js'
 import {
@@ -157,6 +159,21 @@ export default function App() {
     stopSpeaking()
     setSelectedVoiceURI(uri)
     setSelectedVoiceURIState(uri)
+  }
+
+  const handleExportLesson = (format) => {
+    const id = lesson.custom
+      ? lesson.sourceId || `custom-${lesson.uid}`
+      : `lesson-${lesson.id}`
+    const safeId =
+      String(id)
+        .replace(/[^a-z0-9._-]+/gi, '-')
+        .replace(/^-+|-+$/g, '') || `lesson-${lesson.id}`
+    if (format === 'json') {
+      downloadTextFile(lessonToJson(lesson), `${safeId}.json`, 'application/json')
+    } else {
+      downloadTextFile(lessonToMarkdown(lesson), `${safeId}.md`, 'text/markdown')
+    }
   }
 
   const toggleSidebar = () => {
@@ -396,6 +413,24 @@ export default function App() {
                   </button>
                 )}
               </nav>
+
+              <div className="lesson-export">
+                <span className="lesson-export__label">⬇️ 匯出 Export</span>
+                <button
+                  type="button"
+                  className="lesson-export__btn"
+                  onClick={() => handleExportLesson('json')}
+                >
+                  JSON
+                </button>
+                <button
+                  type="button"
+                  className="lesson-export__btn"
+                  onClick={() => handleExportLesson('markdown')}
+                >
+                  Markdown
+                </button>
+              </div>
 
               {activeTab === 'learn' && (
                 <main className="learn">

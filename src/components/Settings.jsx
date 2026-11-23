@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { downloadTextFile } from '../lib/download'
 import { canSpeak, speak } from '../lib/speech'
 import {
   LESSON_JSON_TEMPLATE,
@@ -30,16 +31,6 @@ function voiceRank(voice) {
 function voiceLabel(voice) {
   const tag = isCantonese(voice) ? '廣東話 · ' : isChinese(voice) ? '中文 · ' : ''
   return `${tag}${voice.name} (${voice.lang || '—'})`
-}
-
-function downloadFile(content, filename, type) {
-  const blob = new Blob([content], { type })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
 export default function Settings({
@@ -242,7 +233,7 @@ export default function Settings({
             <button
               type="button"
               className="btn btn--ghost btn--small"
-              onClick={() => downloadFile(LESSON_JSON_TEMPLATE, 'kinderchi-lesson.json', 'application/json')}
+              onClick={() => downloadTextFile(LESSON_JSON_TEMPLATE, 'kinderchi-lesson.json', 'application/json')}
             >
               JSON
             </button>
@@ -250,7 +241,7 @@ export default function Settings({
               type="button"
               className="btn btn--ghost btn--small"
               onClick={() =>
-                downloadFile(LESSON_MARKDOWN_TEMPLATE, 'kinderchi-lesson.md', 'text/markdown')
+                downloadTextFile(LESSON_MARKDOWN_TEMPLATE, 'kinderchi-lesson.md', 'text/markdown')
               }
             >
               Markdown
