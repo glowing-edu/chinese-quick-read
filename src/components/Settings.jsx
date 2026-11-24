@@ -4,6 +4,8 @@ import { canSpeak, speak } from '../lib/speech'
 import {
   LESSON_JSON_TEMPLATE,
   LESSON_MARKDOWN_TEMPLATE,
+  lessonToJson,
+  lessonToMarkdown,
   parseLessonFile,
 } from '../lib/lessonFile'
 
@@ -103,12 +105,36 @@ export default function Settings({
     setImportError('')
   }
 
+  const exportLesson = (lesson, format) => {
+    const id = lesson.custom ? lesson.sourceId || `custom-${lesson.uid}` : `lesson-${lesson.id}`
+    const safeId =
+      String(id)
+        .replace(/[^a-z0-9._-]+/gi, '-')
+        .replace(/^-+|-+$/g, '') || `lesson-${lesson.id}`
+    if (format === 'json') {
+      downloadTextFile(lessonToJson(lesson), `${safeId}.json`, 'application/json')
+    } else {
+      downloadTextFile(lessonToMarkdown(lesson), `${safeId}.md`, 'text/markdown')
+    }
+  }
+
+  const handleDelete = (lesson) => {
+    if (
+      !window.confirm(
+        `刪除「${lesson.title}」？已學進度會保留。\nDelete ${lesson.title}? Learned progress stays.`,
+      )
+    ) {
+      return
+    }
+    onDeleteLesson(lesson.id)
+  }
+
   return (
     <main className="settings">
       <div className="settings__head">
         <div>
           <h2 className="settings__title">⚙️ 設定 Settings</h2>
-          <p className="settings__subtitle">揀語音同匯入自己嘅課堂 · Choose a voice and import your own lessons</p>
+          <p className="settings__subtitle">揀語音、匯入同匯出課堂 · Choose a voice and import or export lessons</p>
         </div>
         <button type="button" className="btn btn--ghost btn--small" onClick={onClose}>
           ← 返去 Back
@@ -268,21 +294,29 @@ export default function Settings({
                     {lesson.sentences.length} 句子
                   </small>
                 </span>
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--small"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        `刪除「${lesson.title}」？已學進度會保留。\nDelete ${lesson.title}? Learned progress stays.`,
-                      )
-                    ) {
-                      onDeleteLesson(lesson.id)
-                    }
-                  }}
-                >
-                  🗑️ 刪除 Delete
-                </button>
+                <div className="settings__lesson-actions">
+                  <button
+                    type="button"
+                    className="settings__mini-btn"
+                    onClick={() => exportLesson(lesson, 'json')}
+                  >
+                    ⬇️ JSON
+                  </button>
+                  <button
+                    type="button"
+                    className="settings__mini-btn"
+                    onClick={() => exportLesson(lesson, 'markdown')}
+                  >
+                    ⬇️ Markdown
+                  </button>
+                  <button
+                    type="button"
+                    className="settings__mini-btn settings__mini-btn--danger"
+                    onClick={() => handleDelete(lesson)}
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

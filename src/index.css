@@ -480,45 +480,6 @@ button {
   }
 }
 
-/* ===== Export lesson ===== */
-
-.lesson-export {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: -4px;
-}
-
-.lesson-export__label {
-  color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.lesson-export__btn {
-  padding: 4px 10px;
-  border: 2px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--ink-soft);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 2px 0 var(--line);
-}
-
-.lesson-export__btn:hover {
-  color: var(--ink);
-}
-
-.lesson-export__btn:active {
-  transform: translateY(2px);
-  box-shadow: none;
-}
-
 /* ===== Learn tab ===== */
 
 .learn {
@@ -1730,6 +1691,41 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.settings__lesson-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.settings__mini-btn {
+  padding: 5px 9px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 0 var(--line);
+}
+
+.settings__mini-btn:hover {
+  color: var(--ink);
+}
+
+.settings__mini-btn:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.settings__mini-btn--danger:hover {
+  color: var(--bad);
+  border-color: var(--bad);
 }
 
 .settings__lesson-list {
